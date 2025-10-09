@@ -1,4 +1,4 @@
-name: Deploy WasmJS Sample
+name: Deploy WasmJS Compose Sample
 
 on:
   push:
