@@ -1,3 +1,4 @@
+import configureReleaseBuild
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 
@@ -61,7 +62,7 @@ kotlin {
             implementation(libs.kotlinx.serialization.json)
             implementation(libs.androidx.collections)
             implementation(libs.concurrentCollections)
-            implementation(projects.library)
+            implementation(projects.evolpaginkCompose)
         }
 
         commonTest.dependencies {
@@ -89,26 +90,18 @@ kotlin {
 
 android {
     namespace = "com.nxoim.sample"
-    compileSdk = 36
 
-    defaultConfig {
-        minSdk = 24
-        targetSdk = 36
-
-        applicationId = "com.nxoim.sample.androidApp"
-        versionCode = 1
+    configureCompileAndMinSdkForApp(
+        applicationId = "com.nxoim.sample.androidApp",
+        versionCode = 1,
         versionName = "1.0.0"
-    }
+    )
 
-    sourceSets["main"].apply {
-        manifest.srcFile("src/androidMain/AndroidManifest.xml")
-        res.srcDirs("src/androidMain/resources")
-        resources.srcDirs("src/commonMain/resources")
-    }
+
+    sourceSets["main"].configureDefaultAndroidSourceSets()
 
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_21
-        targetCompatibility = JavaVersion.VERSION_21
+        configureJava()
     }
 
     buildFeatures {
@@ -116,11 +109,7 @@ android {
     }
 
     buildTypes {
-        getByName("release") {
-            isMinifyEnabled = true
-            isShrinkResources = true
-            signingConfig = signingConfigs.getByName("debug")
-        }
+        configureReleaseBuild(getDebugSigningConfig())
     }
 }
 

@@ -1,7 +1,4 @@
-import com.nxoim.evolpagink.InternalPageableApi
-import com.nxoim.evolpagink.VisibleItemsUpdated
-import com.nxoim.evolpagink.pageable
-import com.nxoim.evolpagink.visibilityAwarePrefetchMinimumItemAmount
+import com.nxoim.evolpagink.core.*
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.filter

@@ -1,4 +1,4 @@
-package com.nxoim.evolpagink
+package com.nxoim.evolpagink.core
 
 import androidx.collection.MutableScatterSet
 import kotlinx.coroutines.CoroutineScope
@@ -18,6 +18,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
+
 
 internal class Paginator<Key : Any, PageItem, Event>(
     private val onPage: (key: Key) -> Flow<List<PageItem>?>,

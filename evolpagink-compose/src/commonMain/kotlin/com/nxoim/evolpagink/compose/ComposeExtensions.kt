@@ -1,6 +1,6 @@
-@file:OptIn(InternalPageableApi::class)
+@file:OptIn(com.nxoim.evolpagink.core.InternalPageableApi::class)
 
-package com.nxoim.evolpagink
+package com.nxoim.evolpagink.compose
 
 import androidx.compose.foundation.lazy.LazyItemScope
 import androidx.compose.foundation.lazy.LazyListItemInfo
@@ -29,6 +29,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.util.fastMapNotNull
+import com.nxoim.evolpagink.core.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map

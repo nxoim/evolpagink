@@ -1,4 +1,4 @@
-package com.nxoim.sample.ui
+package com.nxoim.sample.ui.theme
 
 import androidx.compose.animation.core.AnimationSpec
 import androidx.compose.animation.core.spring

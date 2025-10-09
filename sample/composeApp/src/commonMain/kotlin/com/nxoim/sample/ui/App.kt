@@ -54,11 +54,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
-import com.nxoim.evolpagink.AnchoredPageable
-import com.nxoim.evolpagink.PageEvent
-import com.nxoim.evolpagink.VisibilityAwarePageable
-import com.nxoim.evolpagink.itemsIndexed
-import com.nxoim.evolpagink.toState
+import com.nxoim.evolpagink.core.*
+import com.nxoim.evolpagink.compose.*
+import com.nxoim.sample.ui.theme.rememberNotCupertinoOverscrollFactory
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)

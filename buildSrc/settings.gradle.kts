@@ -1,9 +1,3 @@
-rootProject.name = "evolpagink"
-
-include(":sample:composeApp")
-include(":microbenchmark")
-include(":evolpagink-core")
-include(":evolpagink-compose")
 enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
 
 pluginManagement {
@@ -22,5 +16,11 @@ dependencyResolutionManagement {
         mavenCentral()
         maven("https://maven.pkg.jetbrains.space/public/p/compose/dev")
         maven("https://maven.pkg.jetbrains.space/kotlin/p/wasm/experimental")
+    }
+
+    versionCatalogs {
+        create("libs") {
+            from(files("../gradle/libs.versions.toml"))
+        }
     }
 }

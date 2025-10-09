@@ -1,4 +1,4 @@
-package com.nxoim.evolpagink
+package com.nxoim.evolpagink.core
 
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.async
@@ -23,7 +23,7 @@ fun <Key : Any, PageItem, Event> pageable(
         fetchStrategy = strategy,
         onPageEvent = onPageEvent
     )
-    
+
     val itemsStateFlow = paginator.createFlattenedItemsStateFlow(coroutineScope, initialItems)
 
     return PageableImpl(

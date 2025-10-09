@@ -1,4 +1,4 @@
-package com.nxoim.sample.ui
+package com.nxoim.sample.ui.theme
 
 /*
  * Copyright 2023 The Android Open Source Project
@@ -21,6 +21,7 @@ import androidx.compose.animation.core.AnimationState
 import androidx.compose.animation.core.SpringSpec
 import androidx.compose.animation.core.VectorConverter
 import androidx.compose.animation.core.animateTo
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.OverscrollEffect
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
@@ -385,7 +386,7 @@ class NotCupertinoOverscrollEffect(
                 animationSpec = animationSpec.run {
                     if (this is SpringSpec<*>)
                         // create a new spec to force the 1 pixel threshold
-                        androidx.compose.animation.core.spring(
+                        spring(
                             dampingRatio = this.dampingRatio,
                             stiffness = this.stiffness,
                             visibilityThreshold = 1f // 1 pixel

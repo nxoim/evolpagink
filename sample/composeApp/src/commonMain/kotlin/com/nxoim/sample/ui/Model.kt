@@ -1,9 +1,6 @@
 package com.nxoim.sample.ui
 
-import com.nxoim.evolpagink.PageEvent
-import com.nxoim.evolpagink.anchorPages
-import com.nxoim.evolpagink.pageable
-import com.nxoim.evolpagink.visibilityAwarePrefetchMinimumItemAmount
+import com.nxoim.evolpagink.core.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay

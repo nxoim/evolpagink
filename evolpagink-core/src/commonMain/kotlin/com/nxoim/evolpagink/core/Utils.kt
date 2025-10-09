@@ -1,4 +1,4 @@
-package com.nxoim.evolpagink
+package com.nxoim.evolpagink.core
 
 internal const val defaultAssumedCacheSize = 20
 

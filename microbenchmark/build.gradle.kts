@@ -5,38 +5,20 @@ plugins {
 }
 
 kotlin {
-    jvmToolchain(17)
+    jvmToolchain()
     androidTarget()
 }
+
 android {
-    namespace = "com.example.microbenchmark"
-    compileSdk = 36
+    namespace = "$evolpaginkPackageName.microbenchmark"
 
     sourceSets["main"].manifest.srcFile("src/main/AndroidManifest.xml")
 
-
-    defaultConfig {
-        minSdk = 24
-        android.defaultConfig.testInstrumentationRunner = "androidx.benchmark.junit4.AndroidBenchmarkRunner"
-        testInstrumentationRunnerArguments["androidx.benchmark.profiling.mode"] = "StackSampling"
-        testInstrumentationRunnerArguments["androidx.benchmark.suppressErrors"] = "EMULATOR,LOW-BATTERY"
-    }
-
-    testBuildType = "release"
-
-    buildTypes {
-        getByName("release") {
-            // The androidx.benchmark plugin configures release buildType with proper settings, such as:
-            // - disables code coverage
-            // - adds CPU clock locking task
-            // - signs release buildType with debug signing config
-            // - copies benchmark results into build/outputs/connected_android_test_additional_output folder
-        }
-    }
+    configureBenchmark()
 }
 
 dependencies {
-    androidTestImplementation(projects.library)
+    androidTestImplementation(projects.evolpaginkCore)
     androidTestImplementation(libs.androidx.paging)
     androidTestImplementation(libs.androidx.paging.compose)
     androidTestImplementation(libs.androidx.benchmark.junit)

@@ -1,7 +1,8 @@
-package com.nxoim.evolpagink
+package com.nxoim.evolpagink.core
 
 import androidx.collection.MutableScatterMap
 import kotlinx.coroutines.channels.Channel
+
 
 internal interface PageStorage<Key : Any, PageItem> {
     operator fun get(key: Key): List<PageItem>?
