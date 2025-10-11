@@ -29,6 +29,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.util.fastMapNotNull
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.nxoim.evolpagink.core.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -222,7 +223,7 @@ private fun <Key : Any, PageItem> AnchoredPageable<Key, PageItem>.collectListSta
     coroutineContext: CoroutineContext
 ): PageableComposeState<PageItem> {
     val pageable = this
-    val currentItemsState = pageable.items.collectAsState(coroutineContext)
+    val currentItemsState = pageable.items.collectAsStateWithLifecycle(context = coroutineContext)
     val keyer = remember(key, pageable) {
         PageItemKeyProviderImpl(key)
     }
@@ -268,7 +269,7 @@ private fun <Key : Any, PageItem> VisibilityAwarePageable<Key, PageItem>.collect
     coroutineContext: CoroutineContext
 ): PageableComposeState<PageItem> {
     val pageable = this
-    val currentItemsState = pageable.items.collectAsState(coroutineContext)
+    val currentItemsState = pageable.items.collectAsStateWithLifecycle(context = coroutineContext)
     val keyer = remember(key, pageable) {
         PageItemKeyProviderImpl(key)
     }

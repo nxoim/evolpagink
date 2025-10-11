@@ -29,22 +29,18 @@ fun <Key : Any, PageItem, Event> pageable(
     return PageableImpl(
         items = itemsStateFlow,
         isFetchingPrevious = paginator.activePageKeys
-            .map { keys -> keys.firstOrNull()?.let(strategy.onPreviousKey) != null }
+            .map { keys -> keys.firstOrNull()?.let(strategy.onPreviousPage) != null }
             .stateIn(
                 coroutineScope,
                 started = WhileSubscribed(),
-                initialValue = paginator.activePageKeys.value
-                    .firstOrNull()
-                    ?.let(strategy.onPreviousKey) != null
+                initialValue = false
             ),
         isFetchingNext = paginator.activePageKeys
-            .map { keys -> keys.lastOrNull()?.let(strategy.onNextKey) != null }
+            .map { keys -> keys.lastOrNull()?.let(strategy.onNextPage) != null }
             .stateIn(
                 coroutineScope,
                 started = WhileSubscribed(),
-                initialValue = paginator.activePageKeys.value
-                    .lastOrNull()
-                    ?.let(strategy.onNextKey) != null
+                initialValue = false
             ),
         _onEvent = paginator::updatePagesToCache,
         getPageKeyForItem = paginator::getPageKeyForItem,

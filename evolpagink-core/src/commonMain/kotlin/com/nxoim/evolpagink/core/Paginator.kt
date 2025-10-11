@@ -19,13 +19,12 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
 
-
 internal class Paginator<Key : Any, PageItem, Event>(
     private val onPage: (key: Key) -> Flow<List<PageItem>?>,
     private val fetchStrategy: PageFetchStrategy<Key, PageItem, Event>,
     private val onPageEvent: ((PageEvent<Key>) -> Unit)?
 ) {
-    private val initialKeyList = listOf(fetchStrategy.initialKey) // not to recreate it many times
+    private val initialKeyList = listOf(fetchStrategy.initialPage) // not to recreate it many times
     private val transactionalPageStorage = TransactionalPageStorage(
         ScatterMapPageStorage<Key, PageItem>()
     )
@@ -114,9 +113,9 @@ internal class Paginator<Key : Any, PageItem, Event>(
         alsoNext: Boolean = true,
     ): () -> List<PageItem>? {
         val keys = buildList {
-            if (alsoPrevious) fetchStrategy.onPreviousKey(key)?.let { add(it) }
+            if (alsoPrevious) fetchStrategy.onPreviousPage(key)?.let { add(it) }
             add(key)
-            if (alsoNext) fetchStrategy.onNextKey(key)?.let { add(it) }
+            if (alsoNext) fetchStrategy.onNextPage(key)?.let { add(it) }
         }
 
         transactionalPageStorage.transaction {
@@ -161,12 +160,12 @@ internal class Paginator<Key : Any, PageItem, Event>(
         // between adjacent visible pages
         val bridged = MutableScatterSet<Key>()
         for (targetPageIndex in 0 until targetPages.lastIndex) {
-            var kpageKey = fetchStrategy.onNextKey(targetPages[targetPageIndex])
+            var kpageKey = fetchStrategy.onNextPage(targetPages[targetPageIndex])
             while (kpageKey != null && kpageKey != targetPages[targetPageIndex + 1]) {
                 if (transactionalPageStorage[kpageKey] != null || pageCollectionJobTracker.isActive(kpageKey)) {
                     bridged.add(kpageKey)
                 }
-                kpageKey = fetchStrategy.onNextKey(kpageKey)
+                kpageKey = fetchStrategy.onNextPage(kpageKey)
             }
         }
 
@@ -174,10 +173,10 @@ internal class Paginator<Key : Any, PageItem, Event>(
         for (targetPageIndex in targetPages.indices) {
             merged.add(targetPages[targetPageIndex])
             if (targetPageIndex < targetPages.lastIndex) {
-                var pageKey = fetchStrategy.onNextKey(targetPages[targetPageIndex])
+                var pageKey = fetchStrategy.onNextPage(targetPages[targetPageIndex])
                 while (pageKey != null && pageKey != targetPages[targetPageIndex + 1]) {
                     if (pageKey in bridged) merged.add(pageKey)
-                    pageKey = fetchStrategy.onNextKey(pageKey)
+                    pageKey = fetchStrategy.onNextPage(pageKey)
                 }
             }
         }

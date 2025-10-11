@@ -44,9 +44,9 @@ class Model(
         coroutineScope,
         onPage = { source.getPage(it) },
         strategy = visibilityAwarePrefetchMinimumItemAmount(
-            initialPageKey = "0",
-            onPreviousKey = { ((it.toInt() - 1).takeIf { it >= 0 })?.toString() },
-            onNextKey = { (it.toLong() + 1).toString() },
+            initialPage = "0",
+            onPreviousPage = { ((it.toInt() - 1).takeIf { it >= 0 })?.toString() },
+            onNextPage = { (it.toLong() + 1).toString() },
             minimumItemAmountSurroundingVisible = 20
         ),
     )
