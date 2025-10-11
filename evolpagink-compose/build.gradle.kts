@@ -27,6 +27,8 @@ kotlin {
             api(projects.evolpaginkCore)
             implementation(compose.runtime)
             implementation(compose.foundation)
+            implementation(libs.compose.lifecycle)
+            implementation(libs.kotlinx.coroutines.core)
         }
 
         commonTest.dependencies {
@@ -35,6 +37,10 @@ kotlin {
 
         androidMain.dependencies {
             // Add android specific dependencies here
+        }
+
+        jvmMain.dependencies {
+            implementation(libs.kotlinx.coroutines.swing)
         }
     }
 }
