@@ -2,185 +2,163 @@ package com.nxoim.evolpagink.core
 
 import androidx.collection.MutableScatterSet
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted.Companion.WhileSubscribed
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.cancellable
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.firstOrNull
-import kotlinx.coroutines.flow.onCompletion
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.onStart
-import kotlinx.coroutines.flow.receiveAsFlow
-import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 
 internal class Paginator<Key : Any, PageItem, Event>(
-    private val onPage: (key: Key) -> Flow<List<PageItem>?>,
+    private val pageStore: ObservablePageStorage<Key, PageItem>,
+    private val jobTracker: PageJobTracker<Key>,
     private val fetchStrategy: PageFetchStrategy<Key, PageItem, Event>,
-    private val onPageEvent: ((PageEvent<Key>) -> Unit)?
+    private val onPage: (Key) -> Flow<List<PageItem>?>,
+    private val initialKeys: List<Key>,
+    private val onPageEvent: ((event: PageEvent<Key>) -> Unit)? = null
 ) {
-    private val initialKeyList = listOf(fetchStrategy.initialPage) // not to recreate it many times
-    private val transactionalPageStorage = TransactionalPageStorage(
-        ScatterMapPageStorage<Key, PageItem>()
-    )
-    private val _activePageKeys = MutableStateFlow(initialKeyList)
+    private val preloadMutex = Mutex()
+    private val _activePageKeys = MutableStateFlow(initialKeys)
     val activePageKeys = _activePageKeys.asStateFlow()
-    private val pageCollectionJobTracker = PageJobTracker<Key>()
-
-    fun createFlattenedItemsStateFlow(
-        coroutineScope: CoroutineScope,
-        initialItems: List<PageItem>
-    ): StateFlow<List<PageItem>> = activePageKeys
-        .onEach { pages ->
-            val current = pageCollectionJobTracker.active
-            val toCancel = current - pages
-
-            (pages - current).forEach { page ->
-                getOrLaunchPageCollection(page, coroutineScope)
-            }
-
-            toCancel.forEach { pageCollectionJobTracker.cancelAndJoin(it) }
-        }
-        .combine(
-            transactionalPageStorage.transactionEvents.receiveAsFlow(),
-            ::createFlattenedItemList
-        )
-        .stateIn(
-            coroutineScope,
-            started = WhileSubscribed(),
-            initialValue = initialItems
-        )
-
-    private fun getOrLaunchPageCollection(page: Key, coroutineScope: CoroutineScope) =
-        pageCollectionJobTracker.launchIfIdle(page, coroutineScope) {
-            onPage(page)
-                .cancellable()
-                .onStart { onPageEvent?.invoke(PageEvent.Loading(page)) }
-                .onCompletion {
-                    transactionalPageStorage.transaction {
-                        remove(page)
-                        onPageEvent?.invoke(PageEvent.Unloaded(page))
-                    }
-                }
-                .collect {  items ->
-                    // if items is null = not loaded
-                    // if items is empty = loaded as empty page
-                    items?.let {
-                        transactionalPageStorage.transaction {
-                            set(page, items)
-                            onPageEvent?.invoke(PageEvent.Loaded(page))
-                        }
-                    }
-                }
-        }
-
-    private fun createFlattenedItemList(
-        pages: List<Key>,
-        cache: Map<Key, List<PageItem>>
-    ): List<PageItem> {
-        val capacity = pages.sumOf { key -> cache[key]?.size ?: 0 }
-        val flatMappedItemList = ArrayList<PageItem>(capacity)
-
-        for (index in pages.indices) {
-            val key = pages[index]
-            cache[key]?.let(flatMappedItemList::addAll)
-        }
-        return flatMappedItemList
+    val isFetchingPrevious = _activePageKeys.map { keys ->
+        keys.firstOrNull()?.let(fetchStrategy.onPreviousPage) != null
     }
+    val isFetchingNext = _activePageKeys.map { keys ->
+        keys.lastOrNull()?.let(fetchStrategy.onNextPage) != null
+    }
+
+    fun createFlattenedItemsFlow(coroutineScope: CoroutineScope): Flow<List<PageItem>> =
+        pageStore.pageSnapshots.combine(
+            _activePageKeys.collectPages(coroutineScope),
+            ::grabAndFlattenPages
+        )
 
     fun updatePagesToCache(event: Event) {
-        val targetPages = fetchStrategy.calculatePages(
-            PageFetchContext(
-                event = event,
-                pageCache = transactionalPageStorage.all
+        // keep pages if suddenly paged items arent visible
+        // fallback to initial keys just in case
+        val pages = fetchStrategy
+            .calculatePages(
+                PageFetchContext(event, pageStore.pagesSnapshot)
             )
-        )
-        setActivePages(targetPages.ifEmpty { _activePageKeys.value })
+            .ifEmpty { activePageKeys.value }
+            .ifEmpty { initialKeys }
+
+        _activePageKeys.update { mergeBridgedKeys(pages) }
     }
 
-    fun getPageKeyForItem(item: PageItem): Key? = transactionalPageStorage
-        .getPageKeyForItem(item)
-
-    context(scope: CoroutineScope)
-    suspend fun jumpToAndGetAccessLambda(
-        key: Key,
-        alsoPrevious: Boolean = false,
-        alsoNext: Boolean = true,
-    ): () -> List<PageItem>? {
-        val keys = buildList {
-            if (alsoPrevious) fetchStrategy.onPreviousPage(key)?.let { add(it) }
-            add(key)
-            if (alsoNext) fetchStrategy.onNextPage(key)?.let { add(it) }
-        }
-
-        transactionalPageStorage.transaction {
-            keys
-                .map {
-                    scope.launch {
-                        if (!pageCollectionJobTracker.isActive(it)) {
-                            prefetchFirstPageValue(it)
-                        }
-                    }
-                }
-                .joinAll()
-        }
-        // upon visibility change updatePagesToCache may
-        // get called from ui with no data but thats ok
-        // because it falls back to latest active keys
-        // in that case
-        setActivePages(keys)
-
-        return { transactionalPageStorage[key] }
-    }
-
-    private suspend fun PageStorage<Key, PageItem>.prefetchFirstPageValue(
-        key: Key
-    ) {
-        onPageEvent?.invoke(PageEvent.Loading(key))
-
+    suspend fun collectPageOnce(key: Key, emitSnapshot: Boolean): List<PageItem>? =
         onPage(key)
             .firstOrNull()
-            .let { items ->
-                items?.let {
-                    set(key, it)
-                    onPageEvent?.invoke(PageEvent.Loaded(key))
+            .also {
+                if (it != null)
+                    pageStore.updatePage(key, it, emitSnapshot)
+                else
+                    pageStore.removePage(key, emitSnapshot)
+            }
+
+
+    fun Flow<List<Key>>.collectPages(coroutineScope: CoroutineScope): Flow<List<Key>> =
+        onEach { pages ->
+            val old = jobTracker.active
+            val toCancel = old - pages
+
+            pages.forEach { key ->
+                jobTracker.launchIfIdle(key, coroutineScope) {
+                    onPage(key)
+                        .cancellable()
+                        .onStart {
+                            if (!pageStore.contains(key)) onPageEvent?.invoke(
+                                PageEvent.Loading(key)
+                            )
+                        }
+                        .collect { items ->
+                            if (items != null)
+                                pageStore.updatePage(key, items, true)
+                            else
+                                pageStore.removePage(key, true)
+                        }
                 }
             }
+
+            toCancel.forEach { key ->
+                jobTracker.cancelAndJoin(key)
+                pageStore.removePage(key, false)
+            }
+        }
+
+    fun getPageKeyForItem(item: PageItem): Key? = pageStore.getPageKeyForItem(item)
+
+    suspend fun preloadAndActivate(
+        scope: CoroutineScope,
+        key: Key,
+        alsoPrevious: Boolean = false,
+        alsoNext: Boolean = true
+    ): List<PageItem>? = preloadMutex.withLock {
+        // lock outside internal scope, process inside.
+        // this forcefully avoids ui thread (if scope isn't on it ofc)
+        scope.async {
+            val keys = buildList {
+                if (alsoPrevious) fetchStrategy.onPreviousPage(key)?.let(::add)
+                add(key)
+                if (alsoNext) fetchStrategy.onNextPage(key)?.let(::add)
+            }
+            var pageContents: List<PageItem>? = null
+
+            keys.mapIndexed { index, pageToPrefetch ->
+                launch {
+                    collectPageOnce(pageToPrefetch, emitSnapshot = index == keys.lastIndex)
+                        .also { if (key == pageToPrefetch) pageContents = it }
+                }
+            }.joinAll()
+
+            _activePageKeys.update { mergeBridgedKeys(keys) }
+            pageContents
+        }
+            .await()
     }
 
-    private fun setActivePages(targetPages: List<Key>) {
-        // there may be cases where fast scrolling
-        // in slow environment would cause a page or two to
-        // be unloaded. this mitigates it by collecting keys that sit
-        // between adjacent visible pages
+    private fun mergeBridgedKeys(targetPages: List<Key>): List<Key> {
         val bridged = MutableScatterSet<Key>()
-        for (targetPageIndex in 0 until targetPages.lastIndex) {
-            var kpageKey = fetchStrategy.onNextPage(targetPages[targetPageIndex])
-            while (kpageKey != null && kpageKey != targetPages[targetPageIndex + 1]) {
-                if (transactionalPageStorage[kpageKey] != null || pageCollectionJobTracker.isActive(kpageKey)) {
-                    bridged.add(kpageKey)
-                }
-                kpageKey = fetchStrategy.onNextPage(kpageKey)
+        for (i in 0 until targetPages.lastIndex) {
+            var k = fetchStrategy.onNextPage(targetPages[i])
+            while (k != null && k != targetPages[i + 1]) {
+                if (pageStore.contains(k) || jobTracker.isActive(k)) bridged.add(k)
+                k = fetchStrategy.onNextPage(k)
             }
         }
 
         val merged = ArrayList<Key>(targetPages.size + bridged.size)
-        for (targetPageIndex in targetPages.indices) {
-            merged.add(targetPages[targetPageIndex])
-            if (targetPageIndex < targetPages.lastIndex) {
-                var pageKey = fetchStrategy.onNextPage(targetPages[targetPageIndex])
-                while (pageKey != null && pageKey != targetPages[targetPageIndex + 1]) {
-                    if (pageKey in bridged) merged.add(pageKey)
-                    pageKey = fetchStrategy.onNextPage(pageKey)
+        for (i in targetPages.indices) {
+            merged.add(targetPages[i])
+            if (i < targetPages.lastIndex) {
+                var k = fetchStrategy.onNextPage(targetPages[i])
+                while (k != null && k != targetPages[i + 1]) {
+                    if (k in bridged) merged.add(k)
+                    k = fetchStrategy.onNextPage(k)
                 }
             }
         }
+        return merged.distinct()
+    }
 
-        _activePageKeys.update { merged.distinct() }
+    private fun grabAndFlattenPages(
+        cacheSnapshot: Map<Key, List<PageItem>>,
+        pages: List<Key>
+    ): List<PageItem> {
+        val size = pages.sumOf { cacheSnapshot[it]?.size ?: 0 }
+        val buffer = ArrayList<PageItem>(size)
+        for (key in pages) {
+            cacheSnapshot[key]?.let(buffer::addAll)
+        }
+        return buffer
     }
 }

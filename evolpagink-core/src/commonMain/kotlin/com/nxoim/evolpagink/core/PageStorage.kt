@@ -1,7 +1,6 @@
 package com.nxoim.evolpagink.core
 
 import androidx.collection.MutableScatterMap
-import kotlinx.coroutines.channels.Channel
 
 
 internal interface PageStorage<Key : Any, PageItem> {
@@ -14,22 +13,8 @@ internal interface PageStorage<Key : Any, PageItem> {
     fun getPageKeyForItem(item: PageItem): Key?
 
     fun clear() { all.keys.forEach(::remove) }
-}
 
-internal class TransactionalPageStorage<Key : Any, PageItem>(
-    private val pageStorage: PageStorage<Key, PageItem>
-) {
-    val transactionEvents = Channel<Map<Key, List<PageItem>>>(Channel.CONFLATED)
-
-    val all: Map<Key, List<PageItem>> get() = pageStorage.all
-    operator fun get(key: Key): List<PageItem>? = pageStorage[key]
-    fun getPageKeyForItem(item: PageItem): Key? = pageStorage.getPageKeyForItem(item)
-
-    inline  fun <T> transaction(block: PageStorage<Key, PageItem>.() -> T): T {
-        val result = block(pageStorage)
-        transactionEvents.trySend(pageStorage.all)
-        return result
-    }
+    operator fun contains(key: Key): Boolean
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////
@@ -45,7 +30,9 @@ internal class ScatterMapPageStorage<Key : Any, PageItem> : PageStorage<Key, Pag
         page.forEach { item -> itemToPageKeyCache[item] = key }
     }
 
-    override val all: Map<Key, List<PageItem>> = pageCache.asMap()
+    override val all: Map<Key, List<PageItem>> get() = buildMap {
+        putAll(pageCache.asMap())
+    }
 
     override fun remove(key: Key) {
         pageCache.remove(key)?.forEach { item ->
@@ -54,4 +41,6 @@ internal class ScatterMapPageStorage<Key : Any, PageItem> : PageStorage<Key, Pag
     }
 
     override fun getPageKeyForItem(item: PageItem): Key? = itemToPageKeyCache[item]
+
+    override fun contains(key: Key): Boolean = pageCache.contains(key)
 }

@@ -1,7 +1,6 @@
 package com.nxoim.evolpagink.core
 
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharingStarted.Companion.WhileSubscribed
 import kotlinx.coroutines.flow.StateFlow
@@ -19,45 +18,42 @@ fun <Key : Any, PageItem, Event> pageable(
     initialItems: List<PageItem> = emptyList(),
 ): Pageable<Key, PageItem, Event> {
     val paginator = Paginator(
-        onPage = onPage,
+        pageStore = ObservablePageStorage(ScatterMapPageStorage(), onPageEvent),
+        jobTracker = PageJobTracker(),
         fetchStrategy = strategy,
+        onPage = onPage,
+        initialKeys = listOf(strategy.initialPage),
         onPageEvent = onPageEvent
     )
 
-    val itemsStateFlow = paginator.createFlattenedItemsStateFlow(coroutineScope, initialItems)
+    val itemsStateFlow = paginator
+        .createFlattenedItemsFlow(coroutineScope)
+        .stateIn(
+            coroutineScope,
+            started = WhileSubscribed(),
+            initialValue = initialItems
+        )
 
-    return PageableImpl(
+    return Pageable(
         items = itemsStateFlow,
-        isFetchingPrevious = paginator.activePageKeys
-            .map { keys -> keys.firstOrNull()?.let(strategy.onPreviousPage) != null }
-            .stateIn(
-                coroutineScope,
-                started = WhileSubscribed(),
-                initialValue = false
-            ),
-        isFetchingNext = paginator.activePageKeys
-            .map { keys -> keys.lastOrNull()?.let(strategy.onNextPage) != null }
-            .stateIn(
-                coroutineScope,
-                started = WhileSubscribed(),
-                initialValue = false
-            ),
+        isFetchingPrevious = paginator.isFetchingPrevious.stateIn(
+            coroutineScope,
+            started = WhileSubscribed(),
+            initialValue = false
+        ),
+        isFetchingNext = paginator.isFetchingNext.stateIn(
+            coroutineScope,
+            started = WhileSubscribed(),
+            initialValue = false
+        ),
         _onEvent = paginator::updatePagesToCache,
         getPageKeyForItem = paginator::getPageKeyForItem,
         jumpTo = { key ->
-            // launch in inner scope to avoid ui thread
-            val pageReference =
-                coroutineScope.async { paginator.jumpToAndGetAccessLambda(key) }.await()
+            val page = paginator.preloadAndActivate(coroutineScope, key)
 
-            // wait until transactional storage contains the page
             itemsStateFlow
                 .map { items ->
-                    val page = pageReference.invoke()
-                    if (page != null && items.contains(page.first())) {
-                        page
-                    } else {
-                        null
-                    }
+                    if (page != null && items.contains(page.first())) page else null
                 }
                 .filterNotNull()
                 .first()
@@ -65,24 +61,14 @@ fun <Key : Any, PageItem, Event> pageable(
     )
 }
 
-
-sealed interface Pageable<Key : Any, PageItem, Event> {
-    val items: StateFlow<List<PageItem>>
-    val isFetchingPrevious: StateFlow<Boolean>
-    val isFetchingNext: StateFlow<Boolean>
-    val getPageKeyForItem: (item: PageItem) -> Key?
-    val jumpTo: suspend (key: Key) -> List<PageItem>
-    @InternalPageableApi
+@OptIn(InternalPageableApi::class)
+class Pageable<Key : Any, PageItem, Event>(
+    val items: StateFlow<List<PageItem>>,
+    val isFetchingPrevious: StateFlow<Boolean>,
+    val isFetchingNext: StateFlow<Boolean>,
+    val getPageKeyForItem: (item: PageItem) -> Key?,
+    val jumpTo: suspend (key: Key) -> List<PageItem>,
+    @property:InternalPageableApi
     @Suppress("propertyName")
     val _onEvent: (event: Event) -> Unit
-}
-
-@OptIn(InternalPageableApi::class)
-internal class PageableImpl<Key : Any, PageItem, Event>(
-    override val items: StateFlow<List<PageItem>>,
-    override val isFetchingPrevious: StateFlow<Boolean>,
-    override val isFetchingNext: StateFlow<Boolean>,
-    override val getPageKeyForItem: (item: PageItem) -> Key?,
-    override val jumpTo: suspend (key: Key) -> List<PageItem>,
-    override val _onEvent: (event: Event) -> Unit
-) : Pageable<Key, PageItem, Event>
+)
