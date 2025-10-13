@@ -5,19 +5,19 @@ import kotlin.jvm.JvmInline
 fun <PageItem> visibilityAwarePrefetchMinimumItemAmount(
     initialPage: Int = 0,
     minimumItemAmountSurroundingVisible: Int = 20
-): PageFetchStrategy<Int, PageItem, VisibleItemsUpdated<Int>> = visibilityAwarePrefetchMinimumItemAmount(
+): PageFetchStrategy<Int, PageItem, VisibleItemsUpdated<Int>, Unit> = visibilityAwarePrefetchMinimumItemAmount(
     initialPage = initialPage,
     onNextPage = { it + 1 },
     onPreviousPage = { if (it > 0) it - 1 else null },
     minimumItemAmountSurroundingVisible = minimumItemAmountSurroundingVisible
 )
 
-fun <Key : Any, PageItem> visibilityAwarePrefetchMinimumItemAmount(
+fun <Key : Any, PageItem, Context> visibilityAwarePrefetchMinimumItemAmount(
     initialPage: Key,
-    onNextPage: (key: Key) -> Key?,
-    onPreviousPage: (key: Key) -> Key?,
+    onNextPage: Context.(key: Key) -> Key?,
+    onPreviousPage: Context.(key: Key) -> Key?,
     minimumItemAmountSurroundingVisible: Int = 20
-): PageFetchStrategy<Key, PageItem, VisibleItemsUpdated<Key>> = PageFetchStrategy(
+): PageFetchStrategy<Key, PageItem, VisibleItemsUpdated<Key>, Context> = PageFetchStrategy(
     initialPage = initialPage,
     onNextPage = onNextPage,
     onPreviousPage = onPreviousPage
@@ -25,8 +25,8 @@ fun <Key : Any, PageItem> visibilityAwarePrefetchMinimumItemAmount(
     val halvedAmount = minimumItemAmountSurroundingVisible / 2
     val pages = context.event.value.toMutableList()
 
-    prefetchForwardByItemCount(pages, onNextPage, context.pageCache, halvedAmount)
-    prefetchBackwardByItemCount(pages, onPreviousPage, context.pageCache, halvedAmount)
+    prefetchForwardByItemCount(pages, { context.externalContext.onNextPage(it) }, context.pageCache, halvedAmount)
+    prefetchBackwardByItemCount(pages, { context.externalContext.onPreviousPage(it) }, context.pageCache, halvedAmount)
     pages
 }
 
@@ -34,19 +34,19 @@ fun <Key : Any, PageItem> visibilityAwarePrefetchMinimumItemAmount(
 fun <PageItem> visibilityAwarePrefetchPageAmount(
     initialPage: Int = 0,
     pageAmountSurroundingVisible: Int = 2
-): PageFetchStrategy<Int, PageItem, VisibleItemsUpdated<Int>> = visibilityAwarePrefetchPageAmount(
+): PageFetchStrategy<Int, PageItem, VisibleItemsUpdated<Int>, Unit> = visibilityAwarePrefetchPageAmount(
     initialPage = initialPage,
     onNextPage = { it + 1 },
     onPreviousPage = { if (it > 0) it - 1 else null },
     pageAmountSurroundingVisible = pageAmountSurroundingVisible
 )
 
-fun <Key : Any, PageItem> visibilityAwarePrefetchPageAmount(
+fun <Key : Any, PageItem, Context> visibilityAwarePrefetchPageAmount(
     initialPage: Key,
-    onNextPage: (key: Key) -> Key?,
-    onPreviousPage: (key: Key) -> Key?,
+    onNextPage: Context.(key: Key) -> Key?,
+    onPreviousPage: Context.(key: Key) -> Key?,
     pageAmountSurroundingVisible: Int = 2
-): PageFetchStrategy<Key, PageItem, VisibleItemsUpdated<Key>> = PageFetchStrategy(
+): PageFetchStrategy<Key, PageItem, VisibleItemsUpdated<Key>, Context> = PageFetchStrategy(
     initialPage = initialPage,
     onNextPage = onNextPage,
     onPreviousPage = onPreviousPage,
@@ -54,8 +54,8 @@ fun <Key : Any, PageItem> visibilityAwarePrefetchPageAmount(
         val halvedAmount = pageAmountSurroundingVisible / 2
         val pages = context.event.value.toMutableList()
 
-        prefetchForwardByPageCount(pages, onNextPage, halvedAmount)
-        prefetchBackwardByPageCount(pages, onPreviousPage, halvedAmount)
+        prefetchForwardByPageCount(pages, { context.externalContext.onNextPage(it) }, halvedAmount)
+        prefetchBackwardByPageCount(pages, { context.externalContext.onPreviousPage(it) }, halvedAmount)
         pages
     }
 )
@@ -63,19 +63,19 @@ fun <Key : Any, PageItem> visibilityAwarePrefetchPageAmount(
 fun <PageItem> anchorPages(
     initialPage: Int,
     pageAmountSurroundingAnchor: Int = 5
-): PageFetchStrategy<Int, PageItem, PageAnchorChanged<Int>> = anchorPages(
+): PageFetchStrategy<Int, PageItem, PageAnchorChanged<Int>, Unit> = anchorPages(
     initialPage = initialPage,
     onNextPage = { it + 1 },
     onPreviousPage = { if (it > 0) it - 1 else null },
     pageAmountSurroundingAnchor = pageAmountSurroundingAnchor
 )
 
-fun <Key : Any, PageItem> anchorPages(
+fun <Key : Any, PageItem, Context> anchorPages(
     initialPage: Key,
-    onNextPage: (key: Key) -> Key?,
-    onPreviousPage: (key: Key) -> Key?,
+    onNextPage: Context.(key: Key) -> Key?,
+    onPreviousPage: Context.(key: Key) -> Key?,
     pageAmountSurroundingAnchor: Int = 5
-): PageFetchStrategy<Key, PageItem, PageAnchorChanged<Key>> = PageFetchStrategy(
+): PageFetchStrategy<Key, PageItem, PageAnchorChanged<Key>, Context> = PageFetchStrategy(
     initialPage = initialPage,
     onNextPage = onNextPage,
     onPreviousPage = onPreviousPage,
@@ -83,31 +83,32 @@ fun <Key : Any, PageItem> anchorPages(
         val halvedAmount = pageAmountSurroundingAnchor / 2
         val pages = mutableListOf(context.event.anchor)
 
-        prefetchForwardByPageCount(pages, onNextPage, halvedAmount)
-        prefetchBackwardByPageCount(pages, onPreviousPage, halvedAmount)
+        prefetchForwardByPageCount(pages, { context.externalContext.onNextPage(it) }, halvedAmount)
+        prefetchBackwardByPageCount(pages, { context.externalContext.onPreviousPage(it) }, halvedAmount)
         pages
     }
 )
 
 ////////////////////////////////////////////////////////////////////////////////////////////
 
-class PageFetchStrategy<Key : Any, PageItem, Event>(
+class PageFetchStrategy<Key : Any, PageItem, Event, Context>(
     val initialPage: Key,
-    val onNextPage: (key: Key) -> Key?,
-    val onPreviousPage: (key: Key) -> Key?,
-    private val onPageCalculation: PageFetchStrategy<Key, PageItem, Event>.(
-        context: PageFetchContext<Key, PageItem, Event>
+    val onNextPage: Context.(key: Key) -> Key?,
+    val onPreviousPage: Context.(key: Key) -> Key?,
+    private val onPageCalculation: PageFetchStrategy<Key, PageItem, Event, Context>.(
+        context: PageFetchContext<Key, PageItem, Event, Context>
     ) -> List<Key>
 ) {
     // this is made for easy constructor property access
     // since the class is small
-    fun calculatePages(context: PageFetchContext<Key, PageItem, Event>): List<Key> =
+    fun calculatePages(context: PageFetchContext<Key, PageItem, Event, Context>): List<Key> =
         onPageCalculation(context)
 }
 
-class PageFetchContext<Key : Any, PageItem, Event> internal constructor(
+class PageFetchContext<Key : Any, PageItem, Event, Context> internal constructor(
     val event: Event,
-    val pageCache: Map<Key, List<PageItem>>
+    val pageCache: Map<Key, List<PageItem>>,
+    val externalContext: Context
 )
 
 

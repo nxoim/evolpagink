@@ -1,5 +1,8 @@
 package com.nxoim.evolpagink.core
 
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
+
 internal const val defaultAssumedCacheSize = 20
 
 @Retention(AnnotationRetention.BINARY)
@@ -8,3 +11,5 @@ internal const val defaultAssumedCacheSize = 20
     level = RequiresOptIn.Level.ERROR
 )
 annotation class InternalPageableApi
+
+internal val singleEmissionStateFlowOfUnit = MutableStateFlow(Unit).asStateFlow()

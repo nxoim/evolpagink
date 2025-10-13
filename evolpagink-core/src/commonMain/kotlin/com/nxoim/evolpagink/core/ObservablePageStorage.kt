@@ -33,6 +33,13 @@ internal class ObservablePageStorage<Key : Any, PageItem>(
         onPageEvent?.invoke(PageEvent.Unloaded(key))
     }
 
+    suspend fun clear(emitSnapshot: Boolean) {
+        val snap = storage.all
+        storage.clear()
+        if (emitSnapshot) emitSnapshot()
+        snap.keys.forEach { onPageEvent?.invoke(PageEvent.Unloaded(it)) }
+    }
+
     private suspend fun emitSnapshot() {
         val snap = storage.all
         pagesSnapshot = snap
