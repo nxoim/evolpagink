@@ -37,6 +37,7 @@ import androidx.compose.material3.Slider
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
@@ -66,7 +67,7 @@ import kotlinx.coroutines.launch
 @Composable
 fun App() {
     val model = remember { Model() }
-    val pagerState = rememberPagerState(pageCount = { 6 })
+    val pagerState = rememberPagerState(pageCount = { 7 })
     val coroutineScope = rememberCoroutineScope()
 
     var scale by remember { mutableFloatStateOf(1f) }
@@ -138,6 +139,11 @@ fun App() {
                     onClick = { coroutineScope.launch { pagerState.animateScrollToPage(5) } },
                     text = { Text("Index, Fixed count, Placeholders") }
                 )
+                Tab(
+                    selected = pagerState.currentPage == 6,
+                    onClick = { coroutineScope.launch { pagerState.animateScrollToPage(6) } },
+                    text = { Text("Search, Key") }
+                )
             }
 
             CompositionLocalProvider(
@@ -195,7 +201,76 @@ fun App() {
                                     showNonPaginatedItems = showNonPaginatedItems
                                 )
                             }
+
+                            6 -> SearchPaginatedList(
+                                pageable = model.searchPageable,
+                                onSearchQueryChange = model::updateQuery,
+                                isLoadingFirstResults = model.loadingFirstSearchResults.collectAsState().value
+                            )
                         }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun SearchPaginatedList(
+    pageable: VisibilityAwarePageable<String, ItemData.Loaded>,
+    onSearchQueryChange: (String) -> Unit,
+    isLoadingFirstResults: Boolean
+) {
+    val listState = rememberLazyListState()
+    val pageableState = pageable.toState(
+        state = listState,
+        key = { it.id }
+    )
+
+    val isFetchingPrevious by pageable.isFetchingPrevious.collectAsState()
+    val isFetchingNext by pageable.isFetchingNext.collectAsState()
+
+    Column {
+        key(Unit) {
+            var textFieldValue by remember { mutableStateOf("") }
+
+            TextField(
+                value = textFieldValue,
+                onValueChange = {
+                    textFieldValue = it
+                    onSearchQueryChange(it)
+                }
+            )
+        }
+
+
+        AnimatedVisibility(isLoadingFirstResults) {
+            Text("Searching", style = MaterialTheme.typography.displaySmall)
+        }
+
+        LazyColumn(state = listState, modifier = Modifier.fillMaxSize().padding(16.dp)) {
+            itemsIndexed(pageableState) { index, item ->
+                AnimatedVisibility(index == 0 && isFetchingPrevious) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(8.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator()
+                    }
+                }
+
+                SampleListItem(item, Modifier.animateItem())
+
+                AnimatedVisibility(index == pageableState.items.lastIndex && isFetchingNext) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(8.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator()
                     }
                 }
             }
@@ -258,7 +333,7 @@ fun NonPlaceholderIndexBasedPaginatedList(
                     }
                 }
 
-                SampleListItem(item, Modifier.animateItem())
+                SampleListItem(item, Modifier)
 
                 AnimatedVisibility(index == pageableState.items.lastIndex && isFetchingNext) {
                     Box(
@@ -330,7 +405,7 @@ fun IndexBasedPaginatedList(
                     }
                 }
 
-                SampleListItem(item, Modifier.animateItem())
+                SampleListItem(item, Modifier)
 
                 AnimatedVisibility(index == pageableState.items.lastIndex && isFetchingNext) {
                     Box(
@@ -382,7 +457,7 @@ fun FixedCountPaginatedList(
                 }
             }
 
-            SampleListItem(item, Modifier.animateItem())
+            SampleListItem(item, Modifier)
 
             AnimatedVisibility(index == pageableState.items.lastIndex && isFetchingNext) {
                 Box(
@@ -433,7 +508,7 @@ fun KeyBasedPaginatedList(
                 }
             }
 
-            SampleListItem(item, Modifier.animateItem())
+            SampleListItem(item, Modifier)
 
             AnimatedVisibility(index == pageableState.items.lastIndex && isFetchingNext) {
                 Box(
@@ -490,7 +565,7 @@ fun IndexBasedPaginatedGrid(
                 }
             }
 
-            SampleListItem(item, Modifier.animateItem())
+            SampleListItem(item, Modifier)
 
             AnimatedVisibility(index == pageableState.items.lastIndex && isFetchingNext) {
                 Box(
@@ -546,7 +621,7 @@ fun IndexBasedPaginatedStaggeredGrid(
                 }
             }
 
-            SampleListItem(item, Modifier.animateItem())
+            SampleListItem(item, Modifier)
 
             AnimatedVisibility(index == pageableState.items.lastIndex && isFetchingNext) {
                 Box(
@@ -615,7 +690,7 @@ fun SampleListItem(item: ItemData, modifier: Modifier) {
     when (item) {
         is ItemData.Loaded -> ListItem(
             headlineContent = { Text(item.text) },
-            supportingContent = { Text("ID: ${"$"}{item.id}") },
+            supportingContent = { Text("ID: ${item.id}") },
             modifier = modifier
         )
 

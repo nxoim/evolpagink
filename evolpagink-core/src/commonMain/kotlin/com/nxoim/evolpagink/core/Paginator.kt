@@ -5,8 +5,6 @@ package com.nxoim.evolpagink.core
 import androidx.collection.MutableScatterSet
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -18,7 +16,6 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
@@ -48,7 +45,6 @@ internal class Paginator<Key : Any, PageItem, Event, Context>(
     val isFetchingNext = _isFetchingNext.asStateFlow()
 
     private var currentContext = contextFlow.value
-    private var fetchingTracker: Job? = null
 
     fun collectPagesAndFlattenIntoItemList(): Flow<List<PageItem>> = contextFlow
         .flatMapLatest { newContext ->
@@ -65,8 +61,6 @@ internal class Paginator<Key : Any, PageItem, Event, Context>(
                     pagesSnapshot = emptyMap() // always reload
                 )
             } // else reuse current
-
-            startTrackingFetchingPreviousNext(newContext)
 
             collectAndFlattenPages(pagesSnapshotToBeginEmissionsFrom = oldPagesSnapshot)
         }
@@ -111,53 +105,41 @@ internal class Paginator<Key : Any, PageItem, Event, Context>(
 
     fun getPageKeyForItem(item: PageItem): Key? = storage.getPageKeyForItem(item)
 
-    private suspend fun startTrackingFetchingPreviousNext(context: Context) {
-        fetchingTracker?.cancelAndJoin()
-
-        fetchingTracker = scope.launch {
-            activePageKeys.collect { keys ->
-                _isFetchingPrevious.value = keys
-                    .firstOrNull()
-                    ?.let { strategy.onPreviousPage(context, it) } != null
-
-                _isFetchingNext.value = keys
-                    .lastOrNull()
-                    ?.let { strategy.onNextPage(context, it) } != null
-            }
-        }
-    }
-
     private fun collectAndFlattenPages(
         pagesSnapshotToBeginEmissionsFrom: Map<Key, List<PageItem>>
-    ): Flow<List<PageItem>> =
-        activePageKeys.flatMapLatest { pageKeys ->
-            storage.pageSnapshots
-                .onStart { emit(pagesSnapshotToBeginEmissionsFrom) }
-                .map { pagesSnapshot ->
-                    val active = pageCollectionJobTracker.active
-                    val toCancel = active - pageKeys
+    ): Flow<List<PageItem>> = activePageKeys.flatMapLatest { pageKeys ->
+        val active = pageCollectionJobTracker.active
+        val toCancel = active - pageKeys
 
-                    pageKeys.forEach { launchPageCollectionIfNeeded(it, pagesSnapshot) }
+        pageKeys.forEach { launchPageCollectionIfNeeded(it, storage.pagesSnapshot) }
 
-                    toCancel.forEach { key ->
-                        pageCollectionJobTracker.cancelAndJoin(key)
-                        storage.removePage(key, false)
-                    }
-
-                    pageKeys.flatMap { pagesSnapshot[it].orEmpty() }
-                }
+        toCancel.forEach { key ->
+            pageCollectionJobTracker.cancelAndJoin(key)
+            storage.removePage(key, false)
         }
+
+        storage.pageSnapshots
+            .onStart { emit(pagesSnapshotToBeginEmissionsFrom) }
+            .map { pagesSnapshot ->
+                pageKeys.flatMap { pagesSnapshot[it].orEmpty() }
+            }
+    }
 
     private fun launchPageCollectionIfNeeded(
         key: Key,
         pagesSnapshot: Map<Key, List<PageItem>>
     ) {
         pageCollectionJobTracker.launchIfIdle(key, scope) {
+            val isFirstItem = { _activePageKeys.value.firstOrNull() == key }
+            val isLastItem = { _activePageKeys.value.lastOrNull() == key }
+
             currentContext.onPage(key)
                 .cancellable()
                 .onStart {
                     if (!pagesSnapshot.contains(key)) {
                         onPageEvent?.invoke(PageEvent.Loading(key))
+                        if (isFirstItem()) _isFetchingPrevious.value = true
+                        if (isLastItem()) _isFetchingNext.value = true
                     }
                 }
                 .collect { items ->
@@ -165,6 +147,9 @@ internal class Paginator<Key : Any, PageItem, Event, Context>(
                         storage.updatePage(key, items, true)
                     else
                         storage.removePage(key, true)
+
+                    if (isFirstItem()) _isFetchingPrevious.value = false
+                    if (isLastItem()) _isFetchingNext.value = false
                 }
         }
     }
@@ -197,7 +182,6 @@ internal class Paginator<Key : Any, PageItem, Event, Context>(
 
     private suspend fun stopPageCollections() {
         pageCollectionJobTracker.clear()
-        fetchingTracker?.cancelAndJoin()
         _isFetchingPrevious.value = false
         _isFetchingNext.value = false
     }
