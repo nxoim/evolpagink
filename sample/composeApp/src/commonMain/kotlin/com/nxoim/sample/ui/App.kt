@@ -54,8 +54,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
-import com.nxoim.evolpagink.core.*
-import com.nxoim.evolpagink.compose.*
+import com.nxoim.evolpagink.compose.itemsIndexed
+import com.nxoim.evolpagink.compose.toState
+import com.nxoim.evolpagink.core.AnchoredPageable
+import com.nxoim.evolpagink.core.PageEvent
+import com.nxoim.evolpagink.core.VisibilityAwarePageable
 import com.nxoim.sample.ui.theme.rememberNotCupertinoOverscrollFactory
 import kotlinx.coroutines.launch
 
@@ -221,7 +224,7 @@ fun NonPlaceholderIndexBasedPaginatedList(
                 val pageWeJumpTo = pageable.jumpTo(10)
 
                 pageWeJumpTo
-                    .firstOrNull()
+                    ?.firstOrNull()
                     ?.let { firstItemOfTenthPage ->
                         val index = pageableState.items.indexOf(firstItemOfTenthPage)
 
@@ -293,7 +296,7 @@ fun IndexBasedPaginatedList(
                 val pageWeJumpTo = pageable.jumpTo(10)
 
                 pageWeJumpTo
-                    .firstOrNull()
+                    ?.firstOrNull()
                     ?.let { firstItemOfTenthPage ->
                         val index = pageableState.items.indexOf(firstItemOfTenthPage)
 
