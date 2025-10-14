@@ -92,13 +92,27 @@ fun <Key : Any, PageItem, Context> anchorPages(
 ////////////////////////////////////////////////////////////////////////////////////////////
 
 class PageFetchStrategy<Key : Any, PageItem, Event, Context>(
-    val initialPage: Key,
+    val initialPage: Context.() -> Key,
     val onNextPage: Context.(key: Key) -> Key?,
     val onPreviousPage: Context.(key: Key) -> Key?,
     private val onPageCalculation: PageFetchStrategy<Key, PageItem, Event, Context>.(
         context: PageFetchContext<Key, PageItem, Event, Context>
     ) -> List<Key>
 ) {
+    constructor(
+        initialPage:  Key,
+        onNextPage: Context.(key: Key) -> Key?,
+        onPreviousPage: Context.(key: Key) -> Key?,
+        onPageCalculation: PageFetchStrategy<Key, PageItem, Event, Context>.(
+            context: PageFetchContext<Key, PageItem, Event, Context>
+        ) -> List<Key>
+    ) : this(
+        initialPage = { initialPage },
+        onNextPage = onNextPage,
+        onPreviousPage = onPreviousPage,
+        onPageCalculation = onPageCalculation
+    )
+
     // this is made for easy constructor property access
     // since the class is small
     fun calculatePages(context: PageFetchContext<Key, PageItem, Event, Context>): List<Key> =

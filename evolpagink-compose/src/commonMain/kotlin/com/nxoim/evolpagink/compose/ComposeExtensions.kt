@@ -25,12 +25,15 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ExplicitGroupsComposable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.State
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.util.fastMapNotNull
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.nxoim.evolpagink.core.*
+import com.nxoim.evolpagink.core.AnchoredPageable
+import com.nxoim.evolpagink.core.InternalPageableApi
+import com.nxoim.evolpagink.core.PageAnchorChanged
+import com.nxoim.evolpagink.core.VisibilityAwarePageable
+import com.nxoim.evolpagink.core.VisibleItemsUpdated
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
@@ -231,10 +234,9 @@ private fun <Key : Any, PageItem> AnchoredPageable<Key, PageItem>.collectListSta
     LaunchedEffect(layoutInfo, pageable, currentItemsState) {
         withContext(coroutineContext) {
             snapshotFlow { layoutInfo.visibleItemsInfo }
-                .map {
+                .map { visibleItemsInfo ->
                     val items = currentItemsState.value
                     val itemMap = items.associateBy(keyer::key)
-                    val visibleItemsInfo = layoutInfo.visibleItemsInfo
 
                     if (visibleItemsInfo.isEmpty() || items.isEmpty()) {
                         return@map null
@@ -278,12 +280,9 @@ private fun <Key : Any, PageItem> VisibilityAwarePageable<Key, PageItem>.collect
         withContext(coroutineContext) {
             snapshotFlow { layoutInfo.visibleItemsInfo }
                 // bind emissions to updates in pageable
-                .map {
+                .map { visibleItemsInfo ->
                     val items = currentItemsState.value
-                    val layoutInfo = layoutInfo
                     val itemMap = items.associateBy(keyer::key)
-
-                    val visibleItemsInfo = layoutInfo.visibleItemsInfo
 
                     if (visibleItemsInfo.isEmpty() || items.isEmpty()) {
                         return@map emptyList()

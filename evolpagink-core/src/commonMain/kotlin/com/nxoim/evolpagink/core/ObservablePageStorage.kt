@@ -2,7 +2,6 @@ package com.nxoim.evolpagink.core
 
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
-import kotlin.concurrent.Volatile
 
 internal class ObservablePageStorage<Key : Any, PageItem>(
     private val storage: PageStorage<Key, PageItem>,
@@ -11,7 +10,6 @@ internal class ObservablePageStorage<Key : Any, PageItem>(
     private val _pageSnapshots = MutableSharedFlow<Map<Key, List<PageItem>>>(replay = 1)
     val pageSnapshots = _pageSnapshots.asSharedFlow()
 
-    @Volatile
     var pagesSnapshot: Map<Key, List<PageItem>> = storage.all
         private set
 
