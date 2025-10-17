@@ -11,6 +11,14 @@
 # evolpagink
 Pagination made truly small, truly easy to use. The evil, unknown counterpart of... uhm.. some *other* commonly used pagination library. 
 
+```
+// for compose multiplatform or jetpack compose
+com.nxoim.evolpagink:compose:<version>
+
+// for diy bindings. core is not bound to any ui framework
+com.nxoim.evolpagink:core:<version>
+```
+
 ## how small?
 First of all - the amount of source code is small.
 
