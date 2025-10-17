@@ -28,15 +28,21 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Extract version from tag
+      - name: Extract version
         id: version
         run: |
           if [[ "${GITHUB_REF_TYPE}" == "tag" ]]; then
             echo "version=${GITHUB_REF_NAME}" >> $GITHUB_ENV
             echo "Detected release tag: ${GITHUB_REF_NAME}"
+          elif [[ "${GITHUB_REF_TYPE}" == "branch" && "${GITHUB_REF_NAME}" =~ ^feature/ ]]; then
+            branch="${GITHUB_REF_NAME#feature/}"
+            sanitized_branch=$(echo "$branch" | tr '/' '-' | tr '[:upper:]' '[:lower:]')
+            short_sha=$(echo "${GITHUB_SHA::7}")
+            echo "version=0.0.0-${sanitized_branch}-${short_sha}" >> $GITHUB_ENV
+            echo "Feature build detected: ${sanitized_branch} (${short_sha})"
           else
             echo "version=dev-${GITHUB_SHA::7}" >> $GITHUB_ENV
-            echo "Non-tag build, using version dev-${GITHUB_SHA::7}"
+            echo "Non-tag, non-feature build: dev-${GITHUB_SHA::7}"
           fi
 
       - name: Set up JDK
