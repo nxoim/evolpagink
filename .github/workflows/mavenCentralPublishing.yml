@@ -55,4 +55,4 @@ jobs:
         uses: gradle/actions/setup-gradle@v3
 
       - name: Build and publish to local Maven repo
-        run: ./gradlew clean publishAllPublicationsToProjectLocalRepository zipMavenCentralPortalPublication validateMavenCentralPortalPublication -Pversion=${{ env.version }}
+        run: ./gradlew clean publishAllPublicationsToProjectLocalRepository zipMavenCentralPortalPublication publishMavenCentralPortalPublication -Pversion=${{ env.version }}
