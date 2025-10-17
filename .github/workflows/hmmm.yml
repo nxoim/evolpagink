@@ -6,17 +6,45 @@ on:
     tags: ["*"]
 
 jobs:
+  check-secrets:
+    runs-on: ubuntu-latest
+    env:
+      MAVEN_CENTRAL_PORTAL_USERNAME: ${{ secrets.MAVEN_CENTRAL_PORTAL_USERNAME }}
+      MAVEN_CENTRAL_PORTAL_PASSWORD: ${{ secrets.MAVEN_CENTRAL_PORTAL_PASSWORD }}
+      SIGNING_KEY: ${{ secrets.SIGNING_KEY }}
+      SIGNING_KEY_PASSWORD: ${{ secrets.SIGNING_KEY_PASSWORD }}
+      SIGNING_KEY_ID: ${{ secrets.SIGNING_KEY_ID }}
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      GITHUB_USERNAME: ${{ secrets.GITHUB_USERNAME }}
+    steps:
+      - name: Verify required secrets are available
+        run: |
+          required=(SIGNING_KEY SIGNING_KEY_PASSWORD SIGNING_KEY_ID MAVEN_CENTRAL_PORTAL_USERNAME MAVEN_CENTRAL_PORTAL_PASSWORD GITHUB_TOKEN GITHUB_USERNAME)
+          missing=()
+          for v in "${required[@]}"; do
+            if [ -z "${!v}" ]; then
+              missing+=("$v")
+            else
+              # show length only, never reveal secret content
+              echo "$v set (bytes: $(printf '%s' "${!v}" | wc -c))"
+            fi
+          done
+          if [ ${#missing[@]} -ne 0 ]; then
+            echo "Missing secrets: ${missing[*]}"
+            echo "Secrets are not available to this run. Check repo vs org scope, fork/PR context, or environment protection."
+            exit 1
+          fi
+
   publish-local:
+    needs: check-secrets
     runs-on: ubuntu-latest
 
     env:
       MAVEN_CENTRAL_PORTAL_USERNAME: ${{ secrets.MAVEN_CENTRAL_PORTAL_USERNAME }}
       MAVEN_CENTRAL_PORTAL_PASSWORD: ${{ secrets.MAVEN_CENTRAL_PORTAL_PASSWORD }}
-
       SIGNING_KEY: ${{ secrets.SIGNING_KEY }}
       SIGNING_KEY_PASSWORD: ${{ secrets.SIGNING_KEY_PASSWORD }}
       SIGNING_KEY_ID: ${{ secrets.SIGNING_KEY_ID }}
-
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       GITHUB_USERNAME: ${{ secrets.GITHUB_USERNAME }}
 
