@@ -3,6 +3,9 @@ name: Assemble and publish to Maven Central
 on:
   push:
     tags: ["*"]
+    branches:
+      - "feature/*"
+
 
 jobs:
   publish-local:
