@@ -22,7 +22,7 @@ inline fun Project.setupPublishingAndSigning(
     version = autoVersion()
 
     if (version != "undefined") {
-        println("> Assembling artifact for publishing ${project.group}:${project.name}:${project.version}")
+        logger.info("> Assembling artifact for publishing ${project.group}:${project.name}:${project.version}")
     }
 
     resolveMavenCentralCredentials()
