@@ -79,10 +79,6 @@ To contribute:
 ## Credits
 Kudos to the [Tiler](https://github.com/tunjid/Tiler) project for being an inspiration and for the benchmark
 
-> [!NOTE]
-> The library is experimental and in early stage of development, though intended to
-> eventually reach stability
-
 [badge-android]: http://img.shields.io/badge/-android-6EDB8D.svg?style=flat
 
 [badge-jvm]: http://img.shields.io/badge/-jvm-DB413D.svg?style=flat
