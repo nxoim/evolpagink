@@ -8,7 +8,7 @@ import org.gradle.plugins.signing.Sign
 import java.util.Base64
 import java.util.Properties
 
-val libraryGroup = "com.nxoim"
+val libraryGroup = "com.nxoim.evolpagink"
 val libraryLicenseName = "The Apache License, Version 2.0"
 val libraryLicenseUrl = "https://www.apache.org/licenses/LICENSE-2.0.txt"
 
@@ -22,7 +22,7 @@ inline fun Project.setupPublishingAndSigning(
     version = autoVersion()
 
     if (version != "undefined") {
-        logger.info("> Assembling artifact for publishing ${project.group}:${project.name}:${project.version}")
+        println("> Assembling artifact for publishing ${project.group}:${project.name}:${project.version}")
     }
 
     resolveMavenCentralCredentials()

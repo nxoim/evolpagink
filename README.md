@@ -1,3 +1,5 @@
+![evolpagink](https://img.shields.io/maven-central/v/com.nxoim.evolpagink/core?label=evolpagink)
+
 ![badge][badge-ios]
 ![badge][badge-js]
 ![badge][badge-jvm]

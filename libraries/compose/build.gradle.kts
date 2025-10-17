@@ -25,7 +25,7 @@ kotlin {
 
     sourceSets {
         commonMain.dependencies {
-            api(projects.evolpaginkCore)
+            api(projects.libraries.core)
             implementation(compose.runtime)
             implementation(compose.foundation)
             implementation(libs.compose.lifecycle)
