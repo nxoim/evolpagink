@@ -92,7 +92,11 @@ fun Project.setupSigning() {
                     .decodeToString()
             }
         }
-        val signingPassword = requireCredential("SIGNING_KEY_PASSWORD_BASE64", allowBase64 = true)
+        val signingPassword = runCatching {
+            requireCredential("SIGNING_KEY_PASSWORD")
+        }.getOrElse {
+            requireCredential("SIGNING_KEY_PASSWORD_BASE64", allowBase64 = true)
+        }
         val signingKeyId = getenv("SIGNING_KEY_ID") ?: projectProp("signingKeyId")
 
         if (signingKey.isBlank() || signingPassword.isBlank()) {
