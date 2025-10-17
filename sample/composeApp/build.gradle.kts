@@ -1,4 +1,3 @@
-import configureReleaseBuild
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 
@@ -62,7 +61,7 @@ kotlin {
             implementation(libs.kotlinx.serialization.json)
             implementation(libs.androidx.collections)
             implementation(libs.concurrentCollections)
-            implementation(projects.evolpaginkCompose)
+            implementation(projects.libraries.compose)
         }
 
         commonTest.dependencies {

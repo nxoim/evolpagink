@@ -3,6 +3,7 @@ plugins {
     alias(libs.plugins.compose)
     alias(libs.plugins.compose.compiler)
     alias(libs.plugins.android.library)
+    alias(libs.plugins.publishOnCentral)
 }
 
 kotlin {
@@ -24,7 +25,7 @@ kotlin {
 
     sourceSets {
         commonMain.dependencies {
-            api(projects.evolpaginkCore)
+            api(projects.libraries.core)
             implementation(compose.runtime)
             implementation(compose.foundation)
             implementation(libs.compose.lifecycle)
@@ -58,3 +59,5 @@ android {
         compose = true
     }
 }
+
+setupPublishingAndSigning()

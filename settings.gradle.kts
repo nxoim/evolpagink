@@ -2,8 +2,8 @@ rootProject.name = "evolpagink"
 
 include(":sample:composeApp")
 include(":microbenchmark")
-include(":evolpagink-core")
-include(":evolpagink-compose")
+include(":libraries:core")
+include(":libraries:compose")
 enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
 
 pluginManagement {

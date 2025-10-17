@@ -18,7 +18,7 @@ android {
 }
 
 dependencies {
-    androidTestImplementation(projects.evolpaginkCore)
+    androidTestImplementation(projects.libraries.core)
     androidTestImplementation(libs.androidx.paging)
     androidTestImplementation(libs.androidx.paging.compose)
     androidTestImplementation(libs.androidx.benchmark.junit)

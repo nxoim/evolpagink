@@ -1,3 +1,5 @@
+![evolpagink](https://img.shields.io/maven-central/v/com.nxoim.evolpagink/core?label=evolpagink)
+
 ![badge][badge-ios]
 ![badge][badge-js]
 ![badge][badge-jvm]
@@ -8,6 +10,14 @@
 ![badge][badge-watchos]
 # evolpagink
 Pagination made truly small, truly easy to use. The evil, unknown counterpart of... uhm.. some *other* commonly used pagination library. 
+
+```
+// for compose multiplatform or jetpack compose
+com.nxoim.evolpagink:compose:<version>
+
+// for diy bindings. core is not bound to any ui framework
+com.nxoim.evolpagink:core:<version>
+```
 
 ## how small?
 First of all - the amount of source code is small.
@@ -68,10 +78,6 @@ To contribute:
 
 ## Credits
 Kudos to the [Tiler](https://github.com/tunjid/Tiler) project for being an inspiration and for the benchmark
-
-> [!NOTE]
-> The library is experimental and in early stage of development, though intended to
-> eventually reach stability
 
 [badge-android]: http://img.shields.io/badge/-android-6EDB8D.svg?style=flat
 

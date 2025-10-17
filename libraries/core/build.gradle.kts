@@ -3,6 +3,7 @@ import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 plugins {
     alias(libs.plugins.multiplatform)
     alias(libs.plugins.android.library)
+    alias(libs.plugins.publishOnCentral)
 }
 
 kotlin {
@@ -74,3 +75,5 @@ android {
         configureJava()
     }
 }
+
+setupPublishingAndSigning()
