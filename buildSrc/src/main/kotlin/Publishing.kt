@@ -84,20 +84,23 @@ fun Project.setupSigning() {
             requireCredential("SIGNING_KEY")
         }.getOrElse {
             runCatching {
+                println("SIGNING_KEY not found. Trying SIGNING_KEY_PATH")
                 file(requireCredential("SIGNING_KEY_PATH")).readText()
             }.getOrElse {
+                println("SIGNING_KEY_PATH not found. Trying SIGNING_KEY_BASE64")
                 requireCredential("SIGNING_KEY_BASE64", allowBase64 = true)
             }
         }
         val signingPassword = runCatching {
             requireCredential("SIGNING_KEY_PASSWORD")
         }.getOrElse {
+            println("SIGNING_KEY_PASSWORD not found. Trying SIGNING_KEY_PASSWORD_BASE64")
             requireCredential("SIGNING_KEY_PASSWORD_BASE64", allowBase64 = true)
         }
         val signingKeyId = getenv("SIGNING_KEY_ID") ?: projectProp("signingKeyId")
 
         if (signingKey.isBlank() || signingPassword.isBlank()) {
-            throw GradleException("Signing credentials incomplete: both SIGNING_KEY_BASE64 and SIGNING_PASSWORD_BASE64 are required.")
+            throw GradleException("Signing credentials incomplete: both signing key and it's password are required.")
         }
 
         useInMemoryPgpKeys(signingKeyId, signingKey, signingPassword)
