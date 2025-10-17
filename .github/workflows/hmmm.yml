@@ -1,0 +1,39 @@
+name: Publish to Maven Local (Dev)
+
+on:
+  push:
+    branches: ["publishing-dev"]
+    tags: ["*"]
+
+jobs:
+  publish-local:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # ensures git tags and commits are available
+
+      - name: Extract version from tag
+        id: version
+        run: |
+          if [[ "${GITHUB_REF_TYPE}" == "tag" ]]; then
+            echo "version=${GITHUB_REF_NAME}" >> $GITHUB_ENV
+            echo "Detected release tag: ${GITHUB_REF_NAME}"
+          else
+            echo "version=dev-${GITHUB_SHA::7}" >> $GITHUB_ENV
+            echo "Non-tag build, using version dev-${GITHUB_SHA::7}"
+          fi
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Cache Gradle
+        uses: gradle/actions/setup-gradle@v3
+
+      - name: Build and publish to local Maven repo
+        run: ./gradlew clean publishToMavenLocal -Pversion=${{ env.version }}

@@ -3,6 +3,7 @@ plugins {
     alias(libs.plugins.compose)
     alias(libs.plugins.compose.compiler)
     alias(libs.plugins.android.library)
+    alias(libs.plugins.publishOnCentral)
 }
 
 kotlin {
@@ -58,3 +59,5 @@ android {
         compose = true
     }
 }
+
+setupPublishingAndSigning()
