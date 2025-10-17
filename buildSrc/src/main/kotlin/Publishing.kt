@@ -86,10 +86,7 @@ fun Project.setupSigning() {
             runCatching {
                 file(requireCredential("SIGNING_KEY_PATH")).readText()
             }.getOrElse {
-                Base64
-                    .getDecoder()
-                    .decode(requireCredential("SIGNING_KEY_BASE64", allowBase64 = true))
-                    .decodeToString()
+                requireCredential("SIGNING_KEY_BASE64", allowBase64 = true)
             }
         }
         val signingPassword = runCatching {
