@@ -9,11 +9,22 @@ jobs:
   publish-local:
     runs-on: ubuntu-latest
 
+    env:
+      MAVEN_CENTRAL_PORTAL_USERNAME: ${{ secrets.MAVEN_CENTRAL_PORTAL_USERNAME }}
+      MAVEN_CENTRAL_PORTAL_PASSWORD: ${{ secrets.MAVEN_CENTRAL_PORTAL_PASSWORD }}
+
+      SIGNING_KEY_BASE64: ${{ secrets.SIGNING_KEY_BASE64 }}
+      SIGNING_KEY_PASSWORD_BASE64: ${{ secrets.SIGNING_KEY_PASSWORD_BASE64 }}
+      SIGNING_KEY_ID: ${{ secrets.SIGNING_KEY_ID }}
+
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      GITHUB_USERNAME: ${{ secrets.GITHUB_USERNAME }}
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # ensures git tags and commits are available
+          fetch-depth: 0
 
       - name: Extract version from tag
         id: version
