@@ -8,7 +8,7 @@ on:
 
 
 jobs:
-  publish-local:
+  build-and-publish:
     runs-on: ubuntu-latest
 
     env:
@@ -54,5 +54,5 @@ jobs:
       - name: Cache Gradle
         uses: gradle/actions/setup-gradle@v3
 
-      - name: Build and publish to local Maven repo
-        run: ./gradlew clean publishAllPublicationsToProjectLocalRepository zipMavenCentralPortalPublication publishMavenCentralPortalPublication -Pversion=${{ env.version }}
+      - name: Build and publish
+        run: ./gradlew clean publishAllPublicationsToProjectLocalRepository zipMavenCentralPortalPublication releaseMavenCentralPortalPublication -Pversion=${{ env.version }}
