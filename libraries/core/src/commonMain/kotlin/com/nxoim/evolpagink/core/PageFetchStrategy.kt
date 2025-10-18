@@ -149,8 +149,7 @@ private inline fun <Key : Any, PageItem> prefetchForwardByItemCount(
         if (pages.contains(nextKey)) break
         pages.add(nextKey)
 
-        val pageSize = pageCache[nextKey]?.size ?: 0
-        if (pageSize == 0) break
+        val pageSize = pageCache[nextKey]?.size ?: break
 
         prefetchedItems += pageSize
         nextKey = onNextKey(nextKey)
@@ -170,8 +169,7 @@ private inline fun <Key : Any, PageItem> prefetchBackwardByItemCount(
         if (pages.contains(prevKey)) break
         pages.add(0, prevKey)
 
-        val pageSize = pageCache[prevKey]?.size ?: 0
-        if (pageSize == 0) break
+        val pageSize = pageCache[prevKey]?.size ?: break
 
         prefetchedItems += pageSize
         prevKey = onPreviousKey(prevKey)
