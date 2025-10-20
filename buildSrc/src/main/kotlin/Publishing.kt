@@ -22,7 +22,7 @@ inline fun Project.setupPublishingAndSigning(
     }
 
     group = "com.nxoim.evolpagink"
-    version = autoVersionFromGit()
+    version = projectProp("version") ?: autoVersionFromGit()
 
     if (version != "undefined") {
         println("> Assembling artifact for publishing ${project.group}:${project.name}:${project.version}")

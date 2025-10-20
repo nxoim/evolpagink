@@ -2,10 +2,10 @@ package com.nxoim.evolpagink.core
 
 import kotlin.jvm.JvmInline
 
-fun <PageItem> visibilityAwarePrefetchMinimumItemAmount(
+fun <PageItem, Context> visibilityAwarePrefetchMinimumItemAmount(
     initialPage: Int = 0,
     minimumItemAmountSurroundingVisible: Int = 20
-): PageFetchStrategy<Int, PageItem, VisibleItemsUpdated<Int>, Unit> = visibilityAwarePrefetchMinimumItemAmount(
+): PageFetchStrategy<Int, PageItem, VisibleItemsUpdated<Int>, Context> = visibilityAwarePrefetchMinimumItemAmount(
     initialPage = initialPage,
     onNextPage = { it + 1 },
     onPreviousPage = { if (it > 0) it - 1 else null },
@@ -31,10 +31,10 @@ fun <Key : Any, PageItem, Context> visibilityAwarePrefetchMinimumItemAmount(
 }
 
 
-fun <PageItem> visibilityAwarePrefetchPageAmount(
+fun <PageItem, Context> visibilityAwarePrefetchPageAmount(
     initialPage: Int = 0,
     pageAmountSurroundingVisible: Int = 2
-): PageFetchStrategy<Int, PageItem, VisibleItemsUpdated<Int>, Unit> = visibilityAwarePrefetchPageAmount(
+): PageFetchStrategy<Int, PageItem, VisibleItemsUpdated<Int>, Context> = visibilityAwarePrefetchPageAmount(
     initialPage = initialPage,
     onNextPage = { it + 1 },
     onPreviousPage = { if (it > 0) it - 1 else null },
@@ -60,10 +60,10 @@ fun <Key : Any, PageItem, Context> visibilityAwarePrefetchPageAmount(
     }
 )
 
-fun <PageItem> anchorPages(
+fun <PageItem, Context> anchorPages(
     initialPage: Int,
     pageAmountSurroundingAnchor: Int = 5
-): PageFetchStrategy<Int, PageItem, PageAnchorChanged<Int>, Unit> = anchorPages(
+): PageFetchStrategy<Int, PageItem, PageAnchorChanged<Int>, Context> = anchorPages(
     initialPage = initialPage,
     onNextPage = { it + 1 },
     onPreviousPage = { if (it > 0) it - 1 else null },
