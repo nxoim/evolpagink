@@ -26,7 +26,9 @@ import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
 import androidx.compose.foundation.lazy.staggeredgrid.rememberLazyStaggeredGridState
 import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.PageSize
 import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -51,13 +53,17 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
+import com.nxoim.evolpagink.compose.VerticalPager
 import com.nxoim.evolpagink.compose.itemsIndexed
+import com.nxoim.evolpagink.compose.toPagerState
 import com.nxoim.evolpagink.compose.toState
 import com.nxoim.evolpagink.core.AnchoredPageable
+import com.nxoim.evolpagink.core.InternalPageableApi
 import com.nxoim.evolpagink.core.PageEvent
 import com.nxoim.evolpagink.core.VisibilityAwarePageable
 import com.nxoim.sample.ui.theme.rememberNotCupertinoOverscrollFactory
@@ -67,7 +73,7 @@ import kotlinx.coroutines.launch
 @Composable
 fun App() {
     val model = remember { Model() }
-    val pagerState = rememberPagerState(pageCount = { 7 })
+    val pagerState = rememberPagerState(pageCount = { 8 })
     val coroutineScope = rememberCoroutineScope()
 
     var scale by remember { mutableFloatStateOf(1f) }
@@ -108,7 +114,10 @@ fun App() {
                 )
             }
 
-            PrimaryScrollableTabRow(selectedTabIndex = pagerState.currentPage, edgePadding = 16.dp) {
+            PrimaryScrollableTabRow(
+                selectedTabIndex = pagerState.currentPage,
+                edgePadding = 16.dp
+            ) {
                 Tab(
                     selected = pagerState.currentPage == 0,
                     onClick = { coroutineScope.launch { pagerState.animateScrollToPage(0) } },
@@ -143,6 +152,11 @@ fun App() {
                     selected = pagerState.currentPage == 6,
                     onClick = { coroutineScope.launch { pagerState.animateScrollToPage(6) } },
                     text = { Text("Search, Key") }
+                )
+                Tab(
+                    selected = pagerState.currentPage == 7,
+                    onClick = { coroutineScope.launch { pagerState.animateScrollToPage(7) } },
+                    text = { Text("Vertical pager, Placeholders") }
                 )
             }
 
@@ -207,10 +221,44 @@ fun App() {
                                 onSearchQueryChange = model::updateQuery,
                                 isLoadingFirstResults = model.loadingFirstSearchResults.collectAsState().value
                             )
+
+                            7 -> {
+                                PageTrackerBar(tracker = model.pagerPlaceholdersSampleTracker)
+
+                                VerticalPagerSample(model.pagerPlaceholders)
+                            }
                         }
                     }
                 }
             }
+        }
+    }
+}
+
+@OptIn(ExperimentalFoundationApi::class, InternalPageableApi::class)
+@Composable
+private fun VerticalPagerSample(pageable: VisibilityAwarePageable<Int, ItemData>) {
+    val pageablePagerState = pageable.toPagerState(
+        key = ItemData::toComposeLazyListKey
+    )
+    val pagerState = pageablePagerState.pagerState
+
+
+    VerticalPager(
+        pageablePagerState,
+        modifier = Modifier.fillMaxSize(),
+        pageSpacing = 16.dp,
+        pageSize = PageSize.Fixed(500.dp)
+    ) { item ->
+        Box(
+            Modifier
+                .padding(16.dp)
+                .clip(RoundedCornerShape(28.dp))
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.surfaceContainer),
+            contentAlignment = Alignment.Center
+        )  {
+            SampleListItem(item, Modifier.padding(16.dp))
         }
     }
 }
@@ -698,7 +746,7 @@ fun SampleListItem(item: ItemData, modifier: Modifier) {
             repeat(item.expectedLoadedItemAmount) {
                 ListItem(
                     headlineContent = { Text("Placeholder") },
-                    supportingContent = { Text("") },
+                    supportingContent = { Text("") }
                 )
             }
         }

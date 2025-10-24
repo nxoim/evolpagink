@@ -28,6 +28,7 @@ class Model(
     val indexListPlaceholdersTracker = PageTracker()
     val indexListNoPlaceholdersTracker = PageTracker()
     val indexListFixedCountPlaceholdersTracker = PageTracker()
+    val pagerPlaceholdersSampleTracker = PageTracker()
 
     val indexListPlaceholders = pageable(
         coroutineScope,
@@ -82,7 +83,20 @@ class Model(
         coroutineScope,
         onPage = { source.getPage(it.toString()) },
         onPageEvent = indexListFixedCountPlaceholdersTracker::onEvent,
-        strategy = anchorPages(initialPage = 0, 5)
+        strategy = anchorPages(
+            initialPage = 0,
+            pageAmountSurroundingAnchor = 5
+        )
+    )
+
+    val pagerPlaceholders = pageable(
+        coroutineScope,
+        onPage = { source.getPage(it.toString()) },
+        strategy = visibilityAwarePrefetchMinimumItemAmount(
+            initialPage = 0,
+            minimumItemAmountSurroundingVisible = 2
+        ),
+        onPageEvent = pagerPlaceholdersSampleTracker::onEvent
     )
 
     private val _loadingFirstSearchResults = MutableStateFlow(false)
