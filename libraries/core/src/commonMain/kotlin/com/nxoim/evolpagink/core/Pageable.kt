@@ -5,6 +5,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharingStarted.Companion.WhileSubscribed
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlin.concurrent.atomics.ExperimentalAtomicApi
 
@@ -14,6 +15,7 @@ fun <Key : Any, PageItem, Event> pageable(
     onPage: Unit.(key: Key) -> Flow<List<PageItem>?>,
     strategy: PageFetchStrategy<Key, PageItem, Event, Unit>,
     onPageEvent: ((event: PageEvent<Key>) -> Unit)? = null,
+    resultingItemsTransform: (List<PageItem>) -> List<PageItem> = { it },
     initialItems: List<PageItem> = emptyList(),
 ) = pageable(
     coroutineScope = coroutineScope,
@@ -21,8 +23,10 @@ fun <Key : Any, PageItem, Event> pageable(
     onPage = onPage,
     strategy = strategy,
     onPageEvent = onPageEvent,
+    resultingItemsTransform = resultingItemsTransform,
     initialItems = initialItems
 )
+
 @OptIn(InternalPageableApi::class, ExperimentalAtomicApi::class, ExperimentalCoroutinesApi::class)
 fun <Key : Any, PageItem, Event, Context> pageable(
     coroutineScope: CoroutineScope,
@@ -30,6 +34,7 @@ fun <Key : Any, PageItem, Event, Context> pageable(
     onPage: Context.(key: Key) -> Flow<List<PageItem>?>,
     strategy: PageFetchStrategy<Key, PageItem, Event, Context>,
     onPageEvent: ((event: PageEvent<Key>) -> Unit)? = null,
+    resultingItemsTransform: (List<PageItem>) -> List<PageItem> = { it },
     initialItems: List<PageItem> = emptyList(),
 ): Pageable<Key, PageItem, Event> {
     val paginator = Paginator(
@@ -43,6 +48,7 @@ fun <Key : Any, PageItem, Event, Context> pageable(
     return Pageable(
         items = paginator
             .collectPagesAndFlattenIntoItemList()
+            .map(resultingItemsTransform)
             .stateIn(coroutineScope, WhileSubscribed(), initialItems),
         isFetchingPrevious = paginator.isFetchingPrevious,
         isFetchingNext = paginator.isFetchingNext,
