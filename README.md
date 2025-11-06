@@ -30,7 +30,7 @@ val pageable = pageable(
 		yourSource.getPage(index) 
 		// getPage is Flow<List<YourItem>>
 	}, 
-	strategy = visibilityAwarePrefetchPageAmount( 
+	strategy = prefetchPageAmount( 
 		// this strategy will use your ui to fetch 
 		// items to fill the viewport + prefetch 
 		// specified amount beyond viewport
