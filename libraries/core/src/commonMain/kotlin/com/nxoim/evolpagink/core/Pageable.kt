@@ -10,10 +10,10 @@ import kotlinx.coroutines.flow.stateIn
 import kotlin.concurrent.atomics.ExperimentalAtomicApi
 
 @OptIn(InternalPageableApi::class)
-fun <Key : Any, PageItem, Event> pageable(
+fun <Key : Any, PageItem> pageable(
     coroutineScope: CoroutineScope,
     onPage: Unit.(key: Key) -> Flow<List<PageItem>?>,
-    strategy: PageFetchStrategy<Key, PageItem, Event, Unit>,
+    strategy: PageFetchStrategy<Key, PageItem, Unit>,
     onPageEvent: ((event: PageEvent<Key>) -> Unit)? = null,
     resultingItemsTransform: (List<PageItem>) -> List<PageItem> = { it },
     initialItems: List<PageItem> = emptyList(),
@@ -28,15 +28,15 @@ fun <Key : Any, PageItem, Event> pageable(
 )
 
 @OptIn(InternalPageableApi::class, ExperimentalAtomicApi::class, ExperimentalCoroutinesApi::class)
-fun <Key : Any, PageItem, Event, Context> pageable(
+fun <Key : Any, PageItem, Context> pageable(
     coroutineScope: CoroutineScope,
     context: StateFlow<Context>,
     onPage: Context.(key: Key) -> Flow<List<PageItem>?>,
-    strategy: PageFetchStrategy<Key, PageItem, Event, Context>,
+    strategy: PageFetchStrategy<Key, PageItem, Context>,
     onPageEvent: ((event: PageEvent<Key>) -> Unit)? = null,
     resultingItemsTransform: (List<PageItem>) -> List<PageItem> = { it },
     initialItems: List<PageItem> = emptyList(),
-): Pageable<Key, PageItem, Event> {
+): Pageable<Key, PageItem> {
     val paginator = Paginator(
         coroutineScope,
         context,
@@ -61,7 +61,7 @@ fun <Key : Any, PageItem, Event, Context> pageable(
 }
 
 @OptIn(InternalPageableApi::class)
-class Pageable<Key : Any, PageItem, Event> internal constructor(
+class Pageable<Key : Any, PageItem> internal constructor(
     val items: StateFlow<List<PageItem>>,
     val isFetchingPrevious: StateFlow<Boolean>,
     val isFetchingNext: StateFlow<Boolean>,
@@ -69,5 +69,5 @@ class Pageable<Key : Any, PageItem, Event> internal constructor(
     val jumpTo: suspend (key: Key) -> List<PageItem>?,
     @property:InternalPageableApi
     @Suppress("propertyName")
-    val _onEvent: (event: Event) -> Unit
+    val _onEvent: (event: PageDisplayingEvent<Key>) -> Unit
 )

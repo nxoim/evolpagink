@@ -62,10 +62,9 @@ import com.nxoim.evolpagink.compose.VerticalPager
 import com.nxoim.evolpagink.compose.itemsIndexed
 import com.nxoim.evolpagink.compose.toPagerState
 import com.nxoim.evolpagink.compose.toState
-import com.nxoim.evolpagink.core.AnchoredPageable
 import com.nxoim.evolpagink.core.InternalPageableApi
 import com.nxoim.evolpagink.core.PageEvent
-import com.nxoim.evolpagink.core.VisibilityAwarePageable
+import com.nxoim.evolpagink.core.Pageable
 import com.nxoim.sample.ui.theme.rememberNotCupertinoOverscrollFactory
 import kotlinx.coroutines.launch
 
@@ -237,7 +236,7 @@ fun App() {
 
 @OptIn(ExperimentalFoundationApi::class, InternalPageableApi::class)
 @Composable
-private fun VerticalPagerSample(pageable: VisibilityAwarePageable<Int, ItemData>) {
+private fun VerticalPagerSample(pageable: Pageable<Int, ItemData>) {
     val pageablePagerState = pageable.toPagerState(
         key = ItemData::toComposeLazyListKey
     )
@@ -265,7 +264,7 @@ private fun VerticalPagerSample(pageable: VisibilityAwarePageable<Int, ItemData>
 
 @Composable
 fun SearchPaginatedList(
-    pageable: VisibilityAwarePageable<String, ItemData.Loaded>,
+    pageable: Pageable<String, ItemData.Loaded>,
     onSearchQueryChange: (String) -> Unit,
     isLoadingFirstResults: Boolean
 ) {
@@ -328,7 +327,7 @@ fun SearchPaginatedList(
 
 @Composable
 fun NonPlaceholderIndexBasedPaginatedList(
-    pageable: VisibilityAwarePageable<Int, ItemData.Loaded>,
+    pageable: Pageable<Int, ItemData.Loaded>,
     showNonPaginatedItems: Boolean
 ) {
     val coroutineScope = rememberCoroutineScope()
@@ -400,7 +399,7 @@ fun NonPlaceholderIndexBasedPaginatedList(
 
 @Composable
 fun IndexBasedPaginatedList(
-    pageable: VisibilityAwarePageable<Int, ItemData>,
+    pageable: Pageable<Int, ItemData>,
     showNonPaginatedItems: Boolean
 ) {
     val coroutineScope = rememberCoroutineScope()
@@ -472,13 +471,15 @@ fun IndexBasedPaginatedList(
 
 @Composable
 fun FixedCountPaginatedList(
-    pageable: AnchoredPageable<Int, ItemData>,
+    pageable: Pageable<Int, ItemData>,
     showNonPaginatedItems: Boolean
 ) {
     val listState = rememberLazyListState()
+    @Suppress("Deprecation")
     val pageableState = pageable.toState(
         state = listState,
-        key = ItemData::toComposeLazyListKey
+        key = ItemData::toComposeLazyListKey,
+        anchored = true
     )
 
     val isFetchingPrevious by pageable.isFetchingPrevious.collectAsState()
@@ -523,7 +524,7 @@ fun FixedCountPaginatedList(
 
 @Composable
 fun KeyBasedPaginatedList(
-    pageable: VisibilityAwarePageable<String, ItemData>,
+    pageable: Pageable<String, ItemData>,
     showNonPaginatedItems: Boolean
 ) {
     val listState = rememberLazyListState()
@@ -575,7 +576,7 @@ fun KeyBasedPaginatedList(
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun IndexBasedPaginatedGrid(
-    pageable: VisibilityAwarePageable<Int, ItemData>,
+    pageable: Pageable<Int, ItemData>,
     showNonPaginatedItems: Boolean
 ) {
     val gridState = rememberLazyGridState()
@@ -632,7 +633,7 @@ fun IndexBasedPaginatedGrid(
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun IndexBasedPaginatedStaggeredGrid(
-    pageable: VisibilityAwarePageable<Int, ItemData>,
+    pageable: Pageable<Int, ItemData>,
     showNonPaginatedItems: Boolean
 ) {
     val staggeredGridState = rememberLazyStaggeredGridState()

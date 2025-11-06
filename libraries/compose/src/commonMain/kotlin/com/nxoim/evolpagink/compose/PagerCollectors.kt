@@ -7,11 +7,9 @@ import androidx.compose.runtime.State
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.util.fastMapNotNull
-import com.nxoim.evolpagink.core.AnchoredPageable
 import com.nxoim.evolpagink.core.InternalPageableApi
-import com.nxoim.evolpagink.core.PageAnchorChanged
-import com.nxoim.evolpagink.core.VisibilityAwarePageable
-import com.nxoim.evolpagink.core.VisibleItemsUpdated
+import com.nxoim.evolpagink.core.PageDisplayingEvent
+import com.nxoim.evolpagink.core.Pageable
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flatMapLatest
@@ -19,16 +17,15 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.withContext
 import kotlin.coroutines.CoroutineContext
-import kotlin.jvm.JvmName
 
 @OptIn(InternalPageableApi::class, ExperimentalCoroutinesApi::class)
 @Composable
-@JvmName("collectPagerStateIntoPageableAnchored")
-internal fun <Key : Any, PageItem> AnchoredPageable<Key, PageItem>.collectPagerStateIntoPageable(
+internal fun <Key : Any, PageItem> Pageable<Key, PageItem>.collectPagerStateIntoPageable(
     state: PagerState,
     currentItemsState: State<List<PageItem>>,
     key: (PageItem) -> Any,
-    coroutineContext: CoroutineContext
+    coroutineContext: CoroutineContext,
+    anchored: Boolean
 ): PageablePagerComposeState<PageItem> {
     val pageable = this
     val keyer = remember(key, pageable) {
@@ -37,81 +34,47 @@ internal fun <Key : Any, PageItem> AnchoredPageable<Key, PageItem>.collectPagerS
 
     LaunchedEffect(pageable, currentItemsState) {
         withContext(coroutineContext) {
-            snapshotFlow { state.currentPage }
-                .flatMapLatest { currentPage ->
-                    val items = currentItemsState.value
+            if (anchored) {
+                snapshotFlow { state.currentPage }
+                    .flatMapLatest { currentPage ->
+                        val items = currentItemsState.value
 
-                    snapshotFlow { items.getOrNull(currentPage) }.mapNotNull { currentItem ->
-                        if (currentItem == null)
-                            null
-                        else {
-                            pageable.getPageKeyForItem(currentItem)
+                        snapshotFlow { items.getOrNull(currentPage) }.mapNotNull { currentItem ->
+                            if (currentItem == null)
+                                null
+                            else {
+                                pageable.getPageKeyForItem(currentItem)
+                            }
                         }
                     }
-                }
-                .distinctUntilChanged()
-                .collect { pageable._onEvent(PageAnchorChanged(it)) }
-        }
-    }
+                    .distinctUntilChanged()
+                    .collect { pageable._onEvent(PageDisplayingEvent.PageAnchorChanged(it)) }
+            } else {
+                snapshotFlow { state.layoutInfo }
+                    .map { layoutInfo ->
+                        val visibleItemsInfo = layoutInfo.visiblePagesInfo
+                        val items = currentItemsState.value
+                        val itemMap = items.associateBy(keyer::key)
 
-    return remember(pageable, currentItemsState, keyer, state) {
-        PageablePagerComposeState(
-            _items = currentItemsState,
-            key = { keyer.key(currentItemsState.value.getOrNull(it)!!) },
-            pagerState = state
-        )
-    }
-}
+                        if (visibleItemsInfo.isEmpty() || items.isEmpty()) {
+                            return@map emptyList()
+                        }
 
-@OptIn(InternalPageableApi::class, ExperimentalCoroutinesApi::class)
-@Composable
-@JvmName("collectPagerStateIntoPageableVisibilityAware")
-internal fun <Key : Any, PageItem> VisibilityAwarePageable<Key, PageItem>.collectPagerStateIntoPageable(
-    state: PagerState,
-    currentItemsState: State<List<PageItem>>,
-    key: (PageItem) -> Any,
-    coroutineContext: CoroutineContext
-): PageablePagerComposeState<PageItem> {
-    val pageable = this
-    val keyer = remember(key, pageable) {
-        PageItemKeyProviderImpl(key)
-    }
+                        val visiblePagedItems = visibleItemsInfo
+                            .fastMapNotNull { itemInfo -> itemMap[itemInfo.key] }
 
-    LaunchedEffect(pageable, currentItemsState) {
-        withContext(coroutineContext) {
-            snapshotFlow { state.layoutInfo }
-                .map { layoutInfo ->
-                    val visibleItemsInfo = layoutInfo.visiblePagesInfo
-                    val items = currentItemsState.value
-                    val itemMap = items.associateBy(keyer::key)
+                        if (visiblePagedItems.isEmpty()) return@map emptyList()
 
-                    if (visibleItemsInfo.isEmpty() || items.isEmpty()) {
-                        return@map emptyList()
+                        val visiblePageKeys = visiblePagedItems
+                            .fastMapNotNull(pageable.getPageKeyForItem)
+                            .toSet()
+                            .toList()
+
+                        visiblePageKeys
                     }
-
-                    val visiblePagedItems = visibleItemsInfo
-                        .fastMapNotNull { itemInfo -> itemMap[itemInfo.key] }
-
-                    if (visiblePagedItems.isEmpty()) return@map emptyList()
-
-                    val visiblePageKeys = visiblePagedItems
-                        .fastMapNotNull(pageable.getPageKeyForItem)
-                        .toSet()
-                        .toList()
-
-//                    val firstVisibleIsFirstLoaded = currentItems.isNotEmpty() &&
-//                            visiblePagedItems.first() == currentItems.first()
-//
-//                    val lastVisibleIsLastLoaded = currentItems.isNotEmpty() &&
-//                            visiblePagedItems.last() == currentItems.last()
-
-//                    val viewportIsConsideredFull = layoutInfo.totalItemsCount > 0 &&
-//                            (firstVisibleIsFirstLoaded || lastVisibleIsLastLoaded)
-
-                    visiblePageKeys
-                }
-                .distinctUntilChanged()
-                .collect { pageable._onEvent(VisibleItemsUpdated(it)) }
+                    .distinctUntilChanged()
+                    .collect { pageable._onEvent(PageDisplayingEvent.VisibleItemsUpdated(it)) }
+            }
         }
     }
 

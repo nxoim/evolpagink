@@ -2,9 +2,9 @@ package com.nxoim.sample.ui
 
 import androidx.collection.LruCache
 import com.nxoim.evolpagink.core.PageEvent
-import com.nxoim.evolpagink.core.anchorPages
 import com.nxoim.evolpagink.core.pageable
-import com.nxoim.evolpagink.core.visibilityAwarePrefetchMinimumItemAmount
+import com.nxoim.evolpagink.core.prefetchMinimumItemAmount
+import com.nxoim.evolpagink.core.prefetchPageAmount
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -33,7 +33,7 @@ class Model(
     val indexListPlaceholders = pageable(
         coroutineScope,
         onPage = { source.getPage(it.toString()) },
-        strategy = visibilityAwarePrefetchMinimumItemAmount(
+        strategy = prefetchMinimumItemAmount(
             initialPage = 0,
             minimumItemAmountSurroundingVisible = 20
         ),
@@ -43,7 +43,7 @@ class Model(
     val indexListNoPlaceholders = pageable(
         coroutineScope,
         onPage = { source.getPageNoPlaceholders(it.toString()) },
-        strategy = visibilityAwarePrefetchMinimumItemAmount(
+        strategy = prefetchMinimumItemAmount(
             initialPage = 0,
             minimumItemAmountSurroundingVisible = 20
         ),
@@ -53,7 +53,7 @@ class Model(
     val keyListPlaceholders = pageable(
         coroutineScope,
         onPage = { source.getPage(it) },
-        strategy = visibilityAwarePrefetchMinimumItemAmount(
+        strategy = prefetchMinimumItemAmount(
             initialPage = "0",
             onPreviousPage = { ((it.toInt() - 1).takeIf { it >= 0 })?.toString() },
             onNextPage = { (it.toLong() + 1).toString() },
@@ -64,7 +64,7 @@ class Model(
     val indexGridPlaceholders = pageable(
         coroutineScope,
         onPage = { source.getPage(it.toString()) },
-        strategy = visibilityAwarePrefetchMinimumItemAmount(
+        strategy = prefetchMinimumItemAmount(
             initialPage = 0,
             minimumItemAmountSurroundingVisible = 20
         )
@@ -73,7 +73,7 @@ class Model(
     val indexStaggeredGridPlaceholders = pageable(
         coroutineScope,
         onPage = { source.getPage(it.toString()) },
-        strategy = visibilityAwarePrefetchMinimumItemAmount(
+        strategy = prefetchMinimumItemAmount(
             initialPage = 0,
             minimumItemAmountSurroundingVisible = 20
         ),
@@ -83,16 +83,16 @@ class Model(
         coroutineScope,
         onPage = { source.getPage(it.toString()) },
         onPageEvent = indexListFixedCountPlaceholdersTracker::onEvent,
-        strategy = anchorPages(
+        strategy = prefetchPageAmount(
             initialPage = 0,
-            pageAmountSurroundingAnchor = 5
+            pageAmountSurroundingVisible = 5
         )
     )
 
     val pagerPlaceholders = pageable(
         coroutineScope,
         onPage = { source.getPage(it.toString()) },
-        strategy = visibilityAwarePrefetchMinimumItemAmount(
+        strategy = prefetchMinimumItemAmount(
             initialPage = 0,
             minimumItemAmountSurroundingVisible = 2
         ),
@@ -114,7 +114,7 @@ class Model(
                 cursor = cursor
             ).onEach { _loadingFirstSearchResults.update { false } }
         },
-        strategy = visibilityAwarePrefetchMinimumItemAmount(
+        strategy = prefetchMinimumItemAmount(
             initialPage = currentSearch.value.cursorCache.first(),
             onNextPage = { searchRepo.nextCursor(currentSearch.value, it) },
             onPreviousPage = { searchRepo.previousCursor(currentSearch.value, it) },

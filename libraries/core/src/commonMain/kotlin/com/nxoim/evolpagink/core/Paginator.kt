@@ -23,11 +23,11 @@ import kotlin.concurrent.atomics.ExperimentalAtomicApi
 import kotlin.coroutines.CoroutineContext
 
 @OptIn(ExperimentalCoroutinesApi::class)
-internal class Paginator<Key : Any, PageItem, Event, Context>(
+internal class Paginator<Key : Any, PageItem, Context>(
     private val scope: CoroutineScope,
     private val contextFlow: StateFlow<Context>,
     private val onPage: Context.(Key) -> Flow<List<PageItem>?>,
-    private val strategy: PageFetchStrategy<Key, PageItem, Event, Context>,
+    private val strategy: PageFetchStrategy<Key, PageItem, Context>,
     private val onPageEvent: ((PageEvent<Key>) -> Unit)?,
 ) {
     private val storage = ObservablePageStorage<Key, PageItem>(
@@ -86,7 +86,7 @@ internal class Paginator<Key : Any, PageItem, Event, Context>(
         }
     }
 
-    fun updatePagesToCache(event: Event) {
+    fun updatePagesToCache(event: PageDisplayingEvent<Key>) {
         val pagesSnapshot = storage.pagesSnapshot
 
         val newPages = strategy

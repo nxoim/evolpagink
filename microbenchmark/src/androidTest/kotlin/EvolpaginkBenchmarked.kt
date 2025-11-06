@@ -1,4 +1,7 @@
-import com.nxoim.evolpagink.core.*
+import com.nxoim.evolpagink.core.InternalPageableApi
+import com.nxoim.evolpagink.core.PageDisplayingEvent
+import com.nxoim.evolpagink.core.pageable
+import com.nxoim.evolpagink.core.prefetchMinimumItemAmount
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.filter
@@ -27,7 +30,7 @@ class EvolpaginkBenchmarked(
                     MutableStateFlow(items)
                 }
             },
-            strategy = visibilityAwarePrefetchMinimumItemAmount(
+            strategy = prefetchMinimumItemAmount(
                 initialPage = 0,
                 minimumItemAmountSurroundingVisible = ITEMS_PER_PAGE * 2
             )
@@ -73,7 +76,7 @@ class EvolpaginkBenchmarked(
 
                     // tell pageable which pages are visible so it can re-evaluate (forces reload semantics)
                     pageable.getPageKeyForItem(items.last())?.let { visibleKey ->
-                        pageable._onEvent(VisibleItemsUpdated(listOf(visibleKey)))
+                        pageable._onEvent(PageDisplayingEvent.VisibleItemsUpdated(listOf(visibleKey)))
                     }
 
                     delay(ITEM_LOAD_DELAY_MS) // preserve rebuild cost parity with Paging3
