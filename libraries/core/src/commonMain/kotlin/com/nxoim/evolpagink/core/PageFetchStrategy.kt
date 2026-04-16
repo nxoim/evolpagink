@@ -2,6 +2,10 @@ package com.nxoim.evolpagink.core
 
 import kotlin.jvm.JvmInline
 
+/**
+ * Strategy that prefetches pages to ensure at least [minimumItemAmountSurroundingVisible] items 
+ * are available around visible items in both directions.
+ */
 fun <PageItem, Context> prefetchMinimumItemAmount(
     initialPage: Int = 0,
     minimumItemAmountSurroundingVisible: Int = 20
@@ -12,6 +16,10 @@ fun <PageItem, Context> prefetchMinimumItemAmount(
     minimumItemAmountSurroundingVisible = minimumItemAmountSurroundingVisible
 )
 
+/**
+ * Strategy that prefetches pages to ensure at least [minimumItemAmountSurroundingVisible] items 
+ * are available around visible items in both directions.
+ */
 fun <Key : Any, PageItem, Context> prefetchMinimumItemAmount(
     initialPage: Key,
     onNextPage: Context.(key: Key) -> Key?,
@@ -22,6 +30,7 @@ fun <Key : Any, PageItem, Context> prefetchMinimumItemAmount(
     onNextPage = onNextPage,
     onPreviousPage = onPreviousPage
 ) { context ->
+
     val halvedAmount = minimumItemAmountSurroundingVisible / 2
     val pages = when (val event = context.event) {
         is PageDisplayingEvent.PageAnchorChanged<Key> -> mutableListOf(event.anchor)
@@ -33,6 +42,9 @@ fun <Key : Any, PageItem, Context> prefetchMinimumItemAmount(
     pages
 }
 
+/**
+ * Strategy that prefetches a fixed number of pages around visible items in both directions.
+ */
 fun <PageItem, Context> prefetchPageAmount(
     initialPage: Int = 0,
     pageAmountSurroundingVisible: Int = 2
@@ -43,12 +55,16 @@ fun <PageItem, Context> prefetchPageAmount(
     pageAmountSurroundingVisible = pageAmountSurroundingVisible
 )
 
+/**
+ * Strategy that prefetches a fixed number of pages around visible items in both directions.
+ */
 fun <Key : Any, PageItem, Context> prefetchPageAmount(
     initialPage: Key,
     onNextPage: Context.(key: Key) -> Key?,
     onPreviousPage: Context.(key: Key) -> Key?,
     pageAmountSurroundingVisible: Int = 2
 ): PageFetchStrategy<Key, PageItem, Context> = PageFetchStrategy(
+
     initialPage = initialPage,
     onNextPage = onNextPage,
     onPreviousPage = onPreviousPage,
@@ -67,6 +83,11 @@ fun <Key : Any, PageItem, Context> prefetchPageAmount(
 
 ////////////////////////////////////////////////////////////////////////////////////////////
 
+/**
+ * Defines how pages should be prefetched based on what's currently displayed.
+ * 
+ * Implementations determine which page keys need to be fetched given the current viewport state.
+ */
 class PageFetchStrategy<Key : Any, PageItem, Context>(
     val initialPage: Context.() -> Key,
     val onNextPage: Context.(key: Key) -> Key?,
@@ -75,6 +96,7 @@ class PageFetchStrategy<Key : Any, PageItem, Context>(
         context: PageFetchContext<Key, PageItem, Context>
     ) -> List<Key>
 ) {
+
     constructor(
         initialPage:  Key,
         onNextPage: Context.(key: Key) -> Key?,

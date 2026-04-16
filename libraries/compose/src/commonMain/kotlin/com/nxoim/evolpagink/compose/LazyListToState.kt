@@ -13,6 +13,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlin.coroutines.CoroutineContext
 import kotlin.jvm.JvmName
 
+/**
+ * Binds a [Pageable] to a [LazyListState], enabling automatic page fetching as items become visible.
+ */
 @Composable
 @ExplicitGroupsComposable
 @JvmName("toStateList")
@@ -27,6 +30,9 @@ fun <Key : Any, PageItem> Pageable<Key, PageItem>.toState(
     anchored = false
 )
 
+/**
+ * Binds a [Pageable] to a [LazyGridState], enabling automatic page fetching as items become visible.
+ */
 @Composable
 @ExplicitGroupsComposable
 @JvmName("toStateGrid")
@@ -41,6 +47,9 @@ fun <Key : Any, PageItem> Pageable<Key, PageItem>.toState(
     anchored = false
 )
 
+/**
+ * Binds a [Pageable] to a [LazyStaggeredGridState], enabling automatic page fetching as items become visible.
+ */
 @Composable
 @ExplicitGroupsComposable
 @JvmName("toStateStaggeredGrid")
