@@ -32,7 +32,7 @@ class EvolpaginkBenchmarked(
             },
             strategy = prefetchMinimumItemAmount(
                 initialPage = 0,
-                minimumItemAmountSurroundingVisible = ITEMS_PER_PAGE * 2
+                minimumItemAmount = ITEMS_PER_PAGE * 2
             )
         )
 

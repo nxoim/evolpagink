@@ -35,7 +35,7 @@ class Model(
         onPage = { source.getPage(it.toString()) },
         strategy = prefetchMinimumItemAmount(
             initialPage = 0,
-            minimumItemAmountSurroundingVisible = 20
+            minimumItemAmount = 20
         ),
         onPageEvent = indexListPlaceholdersTracker::onEvent
     )
@@ -45,7 +45,7 @@ class Model(
         onPage = { source.getPageNoPlaceholders(it.toString()) },
         strategy = prefetchMinimumItemAmount(
             initialPage = 0,
-            minimumItemAmountSurroundingVisible = 20
+            minimumItemAmount = 20
         ),
         onPageEvent = indexListNoPlaceholdersTracker::onEvent
     )
@@ -57,7 +57,7 @@ class Model(
             initialPage = "0",
             onPreviousPage = { ((it.toInt() - 1).takeIf { it >= 0 })?.toString() },
             onNextPage = { (it.toLong() + 1).toString() },
-            minimumItemAmountSurroundingVisible = 20
+            minimumItemAmount = 20
         ),
     )
 
@@ -66,7 +66,7 @@ class Model(
         onPage = { source.getPage(it.toString()) },
         strategy = prefetchMinimumItemAmount(
             initialPage = 0,
-            minimumItemAmountSurroundingVisible = 20
+            minimumItemAmount = 20
         )
     )
 
@@ -75,7 +75,7 @@ class Model(
         onPage = { source.getPage(it.toString()) },
         strategy = prefetchMinimumItemAmount(
             initialPage = 0,
-            minimumItemAmountSurroundingVisible = 20
+            minimumItemAmount = 20
         ),
     )
 
@@ -85,7 +85,7 @@ class Model(
         onPageEvent = indexListFixedCountPlaceholdersTracker::onEvent,
         strategy = prefetchPageAmount(
             initialPage = 0,
-            pageAmountSurroundingVisible = 5
+            minimumPageAmount = 5
         )
     )
 
@@ -94,7 +94,7 @@ class Model(
         onPage = { source.getPage(it.toString()) },
         strategy = prefetchMinimumItemAmount(
             initialPage = 0,
-            minimumItemAmountSurroundingVisible = 2
+            minimumItemAmount = 2
         ),
         onPageEvent = pagerPlaceholdersSampleTracker::onEvent
     )
@@ -118,7 +118,7 @@ class Model(
             initialPage = currentSearch.value.cursorCache.first(),
             onNextPage = { searchRepo.nextCursor(currentSearch.value, it) },
             onPreviousPage = { searchRepo.previousCursor(currentSearch.value, it) },
-            minimumItemAmountSurroundingVisible = 20
+            minimumItemAmount = 20
         )
     )
 
