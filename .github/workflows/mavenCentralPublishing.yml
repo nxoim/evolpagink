@@ -55,4 +55,4 @@ jobs:
         uses: gradle/actions/setup-gradle@v3
 
       - name: Build and publish
-        run: ./gradlew clean publishAllPublicationsToProjectLocalRepository zipMavenCentralPortalPublication releaseMavenCentralPortalPublication -Pversion=${{ env.version }}
+        run: ./gradlew clean publishAllPublicationsToProjectLocalRepository zipMavenCentralPortalPublication releaseMavenCentralPortalPublication -Pversion=${{ env.version }} -x dokkaHtml -x dokkaGeneratePublicationHtml --no-daemon --parallel
