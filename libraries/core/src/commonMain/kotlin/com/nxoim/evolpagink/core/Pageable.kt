@@ -9,6 +9,9 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlin.concurrent.atomics.ExperimentalAtomicApi
 
+/**
+ * Creates a [Pageable] with integer-based page keys starting from 0.
+ */
 @OptIn(InternalPageableApi::class)
 fun <Key : Any, PageItem> pageable(
     coroutineScope: CoroutineScope,
@@ -42,6 +45,7 @@ fun <Key : Any, PageItem, Context> pageable(
     resultingItemsTransform: (List<PageItem>) -> List<PageItem> = { it },
     initialItems: List<PageItem> = emptyList(),
 ): Pageable<Key, PageItem> {
+
     val paginator = Paginator(
         coroutineScope,
         context,
