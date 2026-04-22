@@ -2,6 +2,9 @@ package com.nxoim.evolpagink.core
 
 import kotlin.jvm.JvmInline
 
+/**
+ * Represents the loading state of a page identified by [key].
+ */
 sealed interface PageEvent<Key> {
     val key: Key
 

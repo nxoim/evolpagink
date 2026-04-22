@@ -9,6 +9,9 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlin.concurrent.atomics.ExperimentalAtomicApi
 
+/**
+ * Creates a [Pageable] with integer-based page keys starting from 0.
+ */
 @OptIn(InternalPageableApi::class)
 fun <Key : Any, PageItem> pageable(
     coroutineScope: CoroutineScope,
@@ -27,6 +30,11 @@ fun <Key : Any, PageItem> pageable(
     initialItems = initialItems
 )
 
+/**
+ * Creates a [Pageable] that can react to changes in the provided context.
+ *
+ * When the context emits a new value, any currently cached pages are invalidated and re-fetched.
+ */
 @OptIn(InternalPageableApi::class, ExperimentalAtomicApi::class, ExperimentalCoroutinesApi::class)
 fun <Key : Any, PageItem, Context> pageable(
     coroutineScope: CoroutineScope,
@@ -37,6 +45,7 @@ fun <Key : Any, PageItem, Context> pageable(
     resultingItemsTransform: (List<PageItem>) -> List<PageItem> = { it },
     initialItems: List<PageItem> = emptyList(),
 ): Pageable<Key, PageItem> {
+
     val paginator = Paginator(
         coroutineScope,
         context,
@@ -60,6 +69,14 @@ fun <Key : Any, PageItem, Context> pageable(
     )
 }
 
+/**
+ * Represents a paginated data source with flattened items and fetching state.
+ *
+ * The item list automatically updates as pages are fetched based on the configured strategy.
+ *
+ * @param getPageKeyForItem Maps an item back to its page key. Returns null if the item isn't associated with a page.
+ * @param jumpTo Loads and activates the specified page, returning its items. Subsequent fetches will be centered around this page.
+ */
 @OptIn(InternalPageableApi::class)
 class Pageable<Key : Any, PageItem> internal constructor(
     val items: StateFlow<List<PageItem>>,

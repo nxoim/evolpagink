@@ -81,7 +81,9 @@ internal class Paginator<Key : Any, PageItem, Context>(
                         storage.removePage(key, true)
                 }
 
-            _activePageKeys.update { mergeBridgedKeys(listOf(key), pagesSnapshot) }
+            // call with mocked event to trigger user defined
+            // preload strategies as well
+            updatePagesToCache(PageDisplayingEvent.PageAnchorChanged(key))
             pageContents
         }
     }

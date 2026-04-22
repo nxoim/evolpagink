@@ -2,27 +2,35 @@ package com.nxoim.evolpagink.core
 
 import kotlin.jvm.JvmInline
 
+/**
+ * Strategy that prefetches pages to ensure at least [minimumItemAmount] items
+ * are available around visible items in both directions.
+ */
 fun <PageItem, Context> prefetchMinimumItemAmount(
     initialPage: Int = 0,
-    minimumItemAmountSurroundingVisible: Int = 20
+    minimumItemAmount: Int = 20
 ): PageFetchStrategy<Int, PageItem, Context> = prefetchMinimumItemAmount(
     initialPage = initialPage,
     onNextPage = { it + 1 },
     onPreviousPage = { if (it > 0) it - 1 else null },
-    minimumItemAmountSurroundingVisible = minimumItemAmountSurroundingVisible
+    minimumItemAmount = minimumItemAmount
 )
 
+/**
+ * Strategy that prefetches pages to ensure at least [minimumItemAmount] items
+ * are available around visible items in both directions.
+ */
 fun <Key : Any, PageItem, Context> prefetchMinimumItemAmount(
     initialPage: Key,
     onNextPage: Context.(key: Key) -> Key?,
     onPreviousPage: Context.(key: Key) -> Key?,
-    minimumItemAmountSurroundingVisible: Int = 20
+    minimumItemAmount: Int = 20
 ): PageFetchStrategy<Key, PageItem, Context> = PageFetchStrategy(
     initialPage = initialPage,
     onNextPage = onNextPage,
     onPreviousPage = onPreviousPage
 ) { context ->
-    val halvedAmount = minimumItemAmountSurroundingVisible / 2
+    val halvedAmount = minimumItemAmount / 2
     val pages = when (val event = context.event) {
         is PageDisplayingEvent.PageAnchorChanged<Key> -> mutableListOf(event.anchor)
         is PageDisplayingEvent.VisibleItemsUpdated<Key> -> event.value.toMutableList()
@@ -33,27 +41,34 @@ fun <Key : Any, PageItem, Context> prefetchMinimumItemAmount(
     pages
 }
 
+/**
+ * Strategy that prefetches a fixed number of pages around visible items in both directions.
+ */
 fun <PageItem, Context> prefetchPageAmount(
     initialPage: Int = 0,
-    pageAmountSurroundingVisible: Int = 2
+    minimumPageAmount: Int = 2
 ): PageFetchStrategy<Int, PageItem, Context> = prefetchPageAmount(
     initialPage = initialPage,
     onNextPage = { it + 1 },
     onPreviousPage = { if (it > 0) it - 1 else null },
-    pageAmountSurroundingVisible = pageAmountSurroundingVisible
+    minimumPageAmount = minimumPageAmount
 )
 
+/**
+ * Strategy that prefetches a fixed number of pages around visible items in both directions.
+ */
 fun <Key : Any, PageItem, Context> prefetchPageAmount(
     initialPage: Key,
     onNextPage: Context.(key: Key) -> Key?,
     onPreviousPage: Context.(key: Key) -> Key?,
-    pageAmountSurroundingVisible: Int = 2
+    minimumPageAmount: Int = 2
 ): PageFetchStrategy<Key, PageItem, Context> = PageFetchStrategy(
+
     initialPage = initialPage,
     onNextPage = onNextPage,
     onPreviousPage = onPreviousPage,
     onPageCalculation = { context ->
-        val halvedAmount = pageAmountSurroundingVisible / 2
+        val halvedAmount = minimumPageAmount / 2
         val pages = when (val event = context.event) {
             is PageDisplayingEvent.PageAnchorChanged<Key> -> mutableListOf(event.anchor)
             is PageDisplayingEvent.VisibleItemsUpdated<Key> -> event.value.toMutableList()
@@ -67,6 +82,11 @@ fun <Key : Any, PageItem, Context> prefetchPageAmount(
 
 ////////////////////////////////////////////////////////////////////////////////////////////
 
+/**
+ * Defines how pages should be prefetched based on what's currently displayed.
+ * 
+ * Implementations determine which page keys need to be fetched given the current viewport state.
+ */
 class PageFetchStrategy<Key : Any, PageItem, Context>(
     val initialPage: Context.() -> Key,
     val onNextPage: Context.(key: Key) -> Key?,
@@ -75,6 +95,7 @@ class PageFetchStrategy<Key : Any, PageItem, Context>(
         context: PageFetchContext<Key, PageItem, Context>
     ) -> List<Key>
 ) {
+
     constructor(
         initialPage:  Key,
         onNextPage: Context.(key: Key) -> Key?,

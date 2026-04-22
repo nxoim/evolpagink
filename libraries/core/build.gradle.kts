@@ -4,6 +4,7 @@ plugins {
     alias(libs.plugins.multiplatform)
     alias(libs.plugins.android.library)
     alias(libs.plugins.publishOnCentral)
+    alias(libs.plugins.dokka)
 }
 
 kotlin {
@@ -44,7 +45,6 @@ kotlin {
             implementation(libs.kotlinx.coroutines.core)
             implementation(libs.androidx.collections)
             implementation(libs.concurrentCollections)
-
         }
 
         commonTest.dependencies {

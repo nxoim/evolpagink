@@ -16,6 +16,12 @@ import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
+/**
+ * A vertical pager that displays items from a [PageablePagerComposeState].
+ *
+ * Unlike the standard [androidx.compose.foundation.pager.VerticalPager], this function accepts
+ * a lambda with the item directly rather than an index, making it easier to work with paginated data.
+ */
 @Composable
 fun <PageItem> VerticalPager(
     state: PageablePagerComposeState<PageItem>,
@@ -51,6 +57,12 @@ fun <PageItem> VerticalPager(
     pageContent = { pageContent(state.items[it]!!) }
 )
 
+/**
+ * A horizontal pager that displays items from a [PageablePagerComposeState].
+ *
+ * Unlike the standard [androidx.compose.foundation.pager.HorizontalPager], this function accepts
+ * a lambda with the item directly rather than an index, making it easier to work with paginated data.
+ */
 @Composable
 fun <PageItem> HorizontalPager(
     state: PageablePagerComposeState<PageItem>,

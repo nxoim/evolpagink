@@ -17,6 +17,7 @@ androidxTestRunner = "1.7.0"
 androidxTestRules = "1.7.0"
 composeLifecycle = "2.9.4"
 publish-on-central = "9.1.5"
+dokka = "2.2.0"
 
 [libraries]
 androidx-appcompat = { module = "androidx.appcompat:appcompat", version.ref = "androidx-appcompat" }
@@ -44,7 +45,6 @@ android-gradle-plugin = { module = "com.android.tools.build:gradle", version.ref
 kotlin-gradle-plugin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin" }
 publishOnCentralPlugin = { module = "org.danilopianini:publish-on-central", version.ref = "publish-on-central" }
 
-
 [plugins]
 multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
 compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
@@ -54,3 +54,4 @@ kotlinx-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", vers
 android-library = { id = "com.android.library", version.ref = "agp" }
 androidx-benchmark = { id = "androidx.benchmark", version.ref = "androidxBenchmark" }
 publishOnCentral = { id = "org.danilopianini.publish-on-central", version.ref = "publish-on-central" }
+dokka = { id = "org.jetbrains.dokka", version.ref = "dokka" }

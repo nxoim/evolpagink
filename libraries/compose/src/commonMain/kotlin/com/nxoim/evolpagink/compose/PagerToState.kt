@@ -11,6 +11,11 @@ import kotlin.coroutines.CoroutineContext
 import kotlin.coroutines.EmptyCoroutineContext
 import kotlin.jvm.JvmName
 
+/**
+ * Binds a [Pageable] to a Compose Pager (e.g., [HorizontalPager] or [VerticalPager]).
+ *
+ * Each item in the pageable becomes a single pager page. Fetches are triggered as pages become visible.
+ */
 @OptIn(ExperimentalCoroutinesApi::class, InternalPageableApi::class)
 @Composable
 @JvmName("toPagerStateVisible")
@@ -35,6 +40,11 @@ fun <Key : Any, PageItem> Pageable<Key, PageItem>.toPagerState(
     )
 }
 
+/**
+ * Binds a [Pageable] to a Compose Pager (e.g., [HorizontalPager] or [VerticalPager]).
+ *
+ * Each item in the pageable becomes a single pager page. Fetches are triggered as pages become visible.
+ */
 @OptIn(ExperimentalCoroutinesApi::class, InternalPageableApi::class)
 @Composable
 @JvmName("toPagerStateVisibleDeprecated")
