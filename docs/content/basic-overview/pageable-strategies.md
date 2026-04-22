@@ -23,6 +23,10 @@ prefetchPageAmount(
 )   
 ```
 
+::tip
+Should you want your own strategy - you can implement `PageFetchStrategy`. 
+::
+
 Visit the sample linked below and play with the UI scale to see how items are loaded.
 
 ::card

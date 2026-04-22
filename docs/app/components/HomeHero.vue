@@ -2,63 +2,54 @@
   <div class="sample-container">
     <div class="left-section">
       <h1 class="text-5xl font-bold">evolpagink docs</h1>
-      <p class="text-lg text-gray-500">Kotlin Multiplatform pagination library. Get started or explore the Compose WasmJS sample.</p>
-      
+      <p class="text-lg text-gray-500">Kotlin Multiplatform pagination library. Get started or explore the Compose
+        WasmJS sample.</p>
       <div class="flex gap-3 flex-wrap mt-4">
-        <UButton 
-          color="neutral" 
-          size="xl" 
-          to="/quick-start/installation" 
-          trailing-icon="i-lucide-arrow-right"
-        >
-          Quick Start
-        </UButton>
-        
-        <UButton 
-          color="neutral" 
-          icon="i-lucide-code" 
-          size="xl" 
-          to="/other/dokka/index.html" 
-          variant="outline"
-          rel="noopener noreferrer"
-        >
-          API Reference
-        </UButton>
-        
-        <UButton 
-          v-if="!showSample" 
-          color="neutral" 
-          icon="i-lucide-eye" 
-          size="xl" 
-          to="/other/sample/index.html" 
-          variant="outline"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Sample
-        </UButton>
+        <UButton color="neutral" size="xl" to="/quick-start/installation" trailing-icon="i-lucide-arrow-right">Quick
+          Start</UButton>
+        <UButton color="neutral" icon="i-lucide-code" size="xl" to="/other/dokka/index.html" variant="outline"
+          rel="noopener noreferrer">API Reference</UButton>
+        <UButton v-if="!showSample" color="neutral" icon="i-lucide-eye" size="xl" to="/other/sample/index.html"
+          variant="outline" target="_blank" rel="noopener noreferrer">Sample</UButton>
       </div>
     </div>
 
-    <div v-if="showSample" class="right-section">
-      <iframe 
-        src="/other/sample/index.html" 
-        class="w-full h-full border border-accented rounded-xl shadow-lg" 
-      />
-    </div>
+    <Transition name="sample">
+      <div v-if="showSample" class="right-section">
+        <iframe src="/other/sample/index.html" class="w-full h-full border border-accented rounded-xl shadow-lg" />
+      </div>
+    </Transition>
   </div>
 </template>
 
 <script setup>
-import { computed } from 'vue'
-import { useWindowSize } from '@vueuse/core'
+import { useMediaQuery } from '@vueuse/core'
 
-
-const { width } = useWindowSize()
-const showSample = computed(() => width.value >= 1024)
+const showSample = useMediaQuery('(min-width: 1024px)')
 </script>
 
 <style scoped>
+.sample-enter-active,
+.sample-leave-active {
+  transition: all 0.4s;
+}
+
+.sample-enter-from,
+.sample-leave-to {
+  opacity: 0;
+  transform: scale(0.98);
+}
+
+.sample-enter-to,
+.sample-leave-from {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+.right-section {
+  will-change: transform, opacity;
+}
+
 .sample-container {
   display: flex;
   flex-direction: row;
@@ -96,12 +87,12 @@ const showSample = computed(() => width.value >= 1024)
     height: auto;
     min-height: 600px;
   }
-  
+
   .left-section,
   .right-section {
     width: 100%;
   }
-  
+
   .right-section {
     margin-top: 32px;
   }

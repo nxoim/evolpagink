@@ -8,38 +8,43 @@ seo:
 ## Basically
 <steps>
 
+
 ### Define your UI data
 ::collapsible
 ::tip
 All items should have an identificator
 ::
 ```kotlin
-data class YourData( // public ui data structure
+data class SongData( // public ui data structure
     val id: String,
-    val data: Something
+    val title: String,
+    val artist: String,
+    val durationMs: Long
 )
 ```
 ::
+
 
 ### Define your source, design its requirements
 ::collapsible
 ```kotlin
 // this is a source that only allows to retrieve pages by index
-interface YourSource {
-    fun getPage(pageIndex: Int): Flow<List<YourData>>
+interface SongSource {
+    fun getSongPage(pageIndex: Int): Flow<List<SongData>>
 }
 ```
 ::
+
 
 ### Use the source definition in `pageable` in your view model
 ::collapsible
 ```kotlin
 // the source will be implemented by some part of your code that
 // knows about the actual data source
-class YourModel(source: YourSource, coroutineScope: CoroutineScope) {  
-    val yourPageableageable = pageable(
+class SongListModel(source: SongSource, coroutineScope: CoroutineScope) {  
+    val songPageable = pageable(
         coroutineScope,
-        onPage = { index -> source.getPage(index) },
+        onPage = { index -> source.getSongPage(index) },
         strategy = prefetchPageAmount( // one of the default strategies
             initialPage = 0, 
             pageAmountSurroundingVisible = 2
@@ -48,42 +53,61 @@ class YourModel(source: YourSource, coroutineScope: CoroutineScope) {
 }
 ```
 ::
+
 
 
 ### Convert the pageable to usable state in your UI
 ::collapsible
 ```kotlin
 val lazyListState = rememberLazyListState()
-val pageableState = yourModel.pageable.toState(
+val pageableState = songListModel.songPageable.toState(
     lazyListState,
     key = { item -> item.id }
 )
 ```
 ::
 
+
 ### Optionally configure the strategy for `pageable`. See [Pageable Strategies](/basic-overview/pageable-strategies)
+
 
 </steps>
 
+
 ## Example Structure
 
-::code-tree{default-value="yourFeature/YourModel.kt"}
 
-```kotlin [yourFeature/YourSource.kt]
-data class YourData(val id: String, val data: Something)
+::code-tree{default-value="songs/SongListModel.kt"}
 
-interface YourSource {
-    fun getPage(pageIndex: Int): Flow<List<YourData>>
+
+```kotlin [songs/SongData.kt]
+// UI model
+data class SongData(
+    val id: String, 
+    val title: String, 
+    val artist: String, 
+    val durationMs: Long
+)
+```
+
+
+```kotlin [songs/SongSource.kt]
+interface SongSource {
+    fun getSongs(pageIndex: Int): Flow<List<SongData>>
 }
 ```
 
-```kotlin [yourFeature/YourModel.kt]
-class YourModel(source: YourSource, coroutineScope: CoroutineScope) {
-    // the default startegies use Int as page key/index,
+
+```kotlin [songs/SongListModel.kt]
+class SongListModel(
+    private val source: SongSource, 
+    coroutineScope: CoroutineScope
+) {
+    // the default strategies use Int as page key/index,
     // but any page key type you want is possible   
-    val yourPageableageable = pageable(
+    val songPageable = pageable(
         coroutineScope,
-        onPage = { index -> source.getPage(index) },
+        onPage = { index -> source.getSongs(page = index) },
         strategy = prefetchPageAmount( // one of the default strategies
             initialPage = 0, 
             pageAmountSurroundingVisible = 2
@@ -92,22 +116,23 @@ class YourModel(source: YourSource, coroutineScope: CoroutineScope) {
 }
 ```
 
-```kotlin [yourFeature/YourScreen.kt]
+
+```kotlin [songs/SongListScreen.kt]
 @Composable
-fun YourScreen(model: PaginationModel) {
+fun SongListScreen(model: SongListModel) {
     val lazyListState = rememberLazyListState()
-    val pageableState = yourModel.pageable.toState(
+    val pageableState = model.songPageable.toState(
         lazyListState, // will be observed for automatic pageable state updates
         key = { item -> item.id }
     )
 
     LazyColumn(lazyListState) { // dont forget to use the state
-        // this is an overload that automatically uses the key lambda from `.toState` above
-        items(pageableState) { item ->
-            YourItem(item)
+        // this is an overload that automatically 
+        // uses the key lambda from .toState above
+        items(pageableState) { song ->
+            SongItem(song)
         }
     }
 }
 ```
 ::
-
