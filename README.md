@@ -9,15 +9,9 @@
 ![badge][badge-tvos]
 ![badge][badge-watchos]
 # evolpagink
-Pagination made truly small, truly easy to use. The evil, unknown counterpart of... uhm.. some *other* commonly used pagination library. 
-
-```
-// for compose multiplatform or jetpack compose
-com.nxoim.evolpagink:compose:<version>
-
-// for diy bindings. core is not bound to any ui framework
-com.nxoim.evolpagink:core:<version>
-```
+Pagination made truly small, truly easy to use. The evil, unknown counterpart of... uhm.. some *other* commonly used pagination library.
+> [!IMPORTANT]
+> Quick start in [documentation](https://evolpagink.nxoim.com/quick-start/installation).
 
 ## how small?
 First of all - the amount of source code is small.
@@ -25,38 +19,38 @@ First of all - the amount of source code is small.
 But regarding the amount of boilerplate - you define your pageable source:
 ```kotlin
 val pageable = pageable(
-	coroutineScope,
-	onPage = { index ->
-		yourSource.getPage(index) 
-		// getPage is Flow<List<YourItem>>
-	}, 
-	strategy = prefetchPageAmount( 
-		// this strategy will use your ui to fetch 
-		// items to fill the viewport + prefetch 
-		// specified amount beyond viewport
-		initialPage = 0,
-		pageAmountSurroundingVisible = 2
-	)
+    coroutineScope,
+    onPage = { index ->
+        yourSource.getPage(index)
+        // getPage is Flow<List<YourItem>>
+    },
+    strategy = prefetchPageAmount(
+        // this strategy will use your ui to fetch
+        // items to fill the viewport + prefetch
+        // specified amount beyond viewport
+        initialPage = 0,
+        minimumPageAmount = 2
+    )
 )
 ```
 
-Aaaaaand then you use it. For example in compose it looks like: 
+Aaaaaand then you use it. For example in compose it looks like:
 ```kotlin
 val lazyListState = rememberLazyListState()
 val pageableState = yourModel.pageable.toState(
-	lazyListState,
-	key = { item -> item.maybeSomeId }
+    lazyListState,
+    key = { item -> item.maybeSomeId }
 )
 
-LazyColumn(state) {
-	// this is an overload that automatically
-	// uses the key lambda from above
-	items(pageableState) { item ->
-		YourItem(item)
-	}
-	// by the way the overload prevents the
-	// import fights of items(count: Int) 
-	// vs items(items: List<T>)!!
+LazyColumn(lazyListState) {
+    // this is an overload that automatically
+    // uses the key lambda from above
+    items(pageableState) { item ->
+        YourItem(item)
+    }
+    // by the way the overload prevents the
+    // import fights of items(count: Int) 
+    // vs items(items: List<T>)!!
 }
 ```
 
@@ -64,7 +58,7 @@ LazyColumn(state) {
 Theres a microbenchmark in the repository. Clone the repo and run it. If you find the benchmark unsatisfactory - i'd very much appreciate a discussion in an open issue!
 
 ## customizable?
-Yes. If you are unsatisfied with any of the stategies for fetching and prefetching items - you can easily create your own by implementing 'PageFetchStrategy'. You can tailor the behavior precisely. 
+Yes. If you are unsatisfied with any of the strategies for fetching and prefetching items - you can easily create your own by implementing `PageFetchStrategy`. You can tailor the behavior precisely.
 
 ## what else?
 - evolpagink is Compose Multiplatform first, but the **core** logic being **platform agnostic** leaves room for compatibility with other UI frameworks.

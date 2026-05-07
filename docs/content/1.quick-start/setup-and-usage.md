@@ -30,9 +30,8 @@ data class SongData( // public ui data structure
 ```kotlin
 // this is a source that only allows to retrieve pages by index
 interface SongSource {
-    fun getSongPage(pageIndex: Int): Flow<List<SongData>>
+    fun getPage(pageIndex: Int): Flow<List<SongData>>
 }
-```
 ::
 
 
@@ -44,10 +43,10 @@ interface SongSource {
 class SongListModel(source: SongSource, coroutineScope: CoroutineScope) {  
     val songPageable = pageable(
         coroutineScope,
-        onPage = { index -> source.getSongPage(index) },
+        onPage = { index -> source.getPage(index) },
         strategy = prefetchPageAmount( // one of the default strategies
             initialPage = 0, 
-            pageAmountSurroundingVisible = 2
+            minimumPageAmount = 2
         )
     )
 }
@@ -93,7 +92,7 @@ data class SongData(
 
 ```kotlin [songs/SongSource.kt]
 interface SongSource {
-    fun getSongs(pageIndex: Int): Flow<List<SongData>>
+    fun getPage(pageIndex: Int): Flow<List<SongData>>
 }
 ```
 
@@ -107,10 +106,10 @@ class SongListModel(
     // but any page key type you want is possible   
     val songPageable = pageable(
         coroutineScope,
-        onPage = { index -> source.getSongs(page = index) },
+        onPage = { index -> source.getPage(index) },
         strategy = prefetchPageAmount( // one of the default strategies
             initialPage = 0, 
-            pageAmountSurroundingVisible = 2
+            minimumPageAmount = 2
         )
     )
 }

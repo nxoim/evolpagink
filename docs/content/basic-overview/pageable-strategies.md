@@ -10,8 +10,8 @@ seo:
 The variant based on minimum item amount will try to load as many pages needed to reach the minimum specified amount of items.
 ```kotlin
 prefetchMinimumItemAmount( // the default overload for indexed pages
-    initialPage = 0, // self explanatory
-    minimumItemAmount = 20 
+    initialPage = 0, // the first page key to use when loading starts
+    minimumItemAmount = 20
 )
 ```
 

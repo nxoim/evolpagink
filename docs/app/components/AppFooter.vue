@@ -14,6 +14,6 @@
   </footer>
 
   <CookieBanners 
-    text="'No tracking or analytical cookies are used. Service and essential features provided by Cloudflare'" 
+    text="No tracking or analytical cookies are used. Service and essential features provided by Cloudflare"
   />
 </template>

@@ -69,3 +69,5 @@ buildSrc/build/
 # OS specific
 .DS_Store
 Thumbs.db
+.kotlin/
+**/xcuserdata/
