@@ -17,8 +17,8 @@ seo:
 evolpagink = "0.6.0"
 
 [libraries]
-evolpaginkCompose = { module = "com.nxoim:evolpagink-compose", version.ref = "evolpagink" }
-evolpaginkCore = { module = "com.nxoim:evolpagink-core", version.ref = "evolpagink" }
+evolpaginkCompose = { module = "com.nxoim.evolpagink:compose", version.ref = "evolpagink" }
+evolpaginkCore = { module = "com.nxoim.evolpagink:core", version.ref = "evolpagink" }
 ```
 
 ```kotlin [build.gradle.kts]
