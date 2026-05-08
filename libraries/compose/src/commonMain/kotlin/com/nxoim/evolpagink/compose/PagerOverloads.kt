@@ -54,7 +54,7 @@ fun <PageItem> VerticalPager(
     pageNestedScrollConnection = pageNestedScrollConnection,
     snapPosition = snapPosition,
     overscrollEffect = overscrollEffect,
-    pageContent = { pageContent(state.items[it]!!) }
+    pageContent = { pageContent(state.items.value[it]!!) }
 )
 
 /**
@@ -95,5 +95,5 @@ fun <PageItem> HorizontalPager(
     pageNestedScrollConnection = pageNestedScrollConnection,
     snapPosition = snapPosition,
     overscrollEffect = overscrollEffect,
-    pageContent = { pageContent(state.items[it]!!)}
+    pageContent = { pageContent(state.items.value[it]!!)}
 )

@@ -80,7 +80,7 @@ internal fun <Key : Any, PageItem> Pageable<Key, PageItem>.collectPagerStateInto
 
     return remember(pageable, currentItemsState, keyer, state) {
         PageablePagerComposeState(
-            _items = currentItemsState,
+            items = currentItemsState,
             key = { keyer.key(currentItemsState.value.getOrNull(it)!!) },
             pagerState = state
         )

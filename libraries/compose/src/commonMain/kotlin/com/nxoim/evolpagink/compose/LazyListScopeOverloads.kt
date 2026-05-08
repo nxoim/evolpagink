@@ -23,7 +23,7 @@ inline fun <T> LazyStaggeredGridScope.items(
     noinline span: ((T) -> StaggeredGridItemSpan)? = null,
     crossinline itemContent: @Composable LazyStaggeredGridItemScope.(T) -> Unit
 ) = items<T>(
-    items = state.items,
+    items = state.items.value,
     key = state::key,
     span = span,
     contentType = contentType,
@@ -36,7 +36,7 @@ inline fun <T> LazyStaggeredGridScope.itemsIndexed(
     noinline span: ((index: Int, item: T) -> StaggeredGridItemSpan)? = null,
     crossinline itemContent: @Composable LazyStaggeredGridItemScope.(index: Int, item: T) -> Unit
 ) = itemsIndexed<T>(
-    items = state.items,
+    items = state.items.value,
     key = state::key,
     span = span,
     contentType = contentType,
@@ -48,7 +48,7 @@ inline fun <T> LazyGridScope.items(
     noinline contentType: (T) -> Any? = { null },
     crossinline itemContent: @Composable LazyGridItemScope.(T) -> Unit
 ) = items<T>(
-    items = state.items,
+    items = state.items.value,
     key = state::key,
     contentType = contentType,
     itemContent = itemContent
@@ -59,7 +59,7 @@ inline fun <T> LazyGridScope.itemsIndexed(
     crossinline contentType: (index: Int, item: T) -> Any? = { _, _ -> null },
     crossinline itemContent: @Composable LazyGridItemScope.(index: Int, item: T) -> Unit
 ) = itemsIndexed<T>(
-    items = state.items,
+    items = state.items.value,
     key = state::key,
     contentType = contentType,
     itemContent = itemContent
@@ -70,7 +70,7 @@ inline fun <T> LazyListScope.items(
     noinline contentType: (T) -> Any? = { null },
     crossinline itemContent: @Composable LazyItemScope.(T) -> Unit
 ) = items<T>(
-    items = state.items,
+    items = state.items.value,
     key = state::key,
     contentType = contentType,
     itemContent = itemContent
@@ -81,7 +81,7 @@ inline fun <T> LazyListScope.itemsIndexed(
     crossinline contentType: (Int, T) -> Any? = { _, _ -> null },
     crossinline itemContent: @Composable LazyItemScope.(index: Int, item: T) -> Unit
 ) = itemsIndexed<T>(
-    items = state.items,
+    items = state.items.value,
     key = state::key,
     contentType = contentType,
     itemContent = itemContent

@@ -5,19 +5,15 @@ import androidx.compose.runtime.State
 import kotlin.jvm.JvmInline
 
 class PageableComposeState<T> internal constructor(
-    private val _items: State<List<T>>,
+    val items: State<List<T>>,
     keyer: PageItemKeyProvider<T>
-) : PageItemKeyProvider<T> by keyer {
-    val items get() = _items.value
-}
+) : PageItemKeyProvider<T> by keyer
 
 class PageablePagerComposeState<T> internal constructor(
-    private val _items: State<List<T>>,
+    val items: State<List<T>>,
     val key: (index: Int) -> Any,
     val pagerState: PagerState
-) {
-    val items get() = _items.value
-}
+)
 
 // exists to centralize compose list key management
 // between paging and displaying lists

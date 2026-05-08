@@ -310,7 +310,7 @@ fun SearchPaginatedList(
 
                 SampleListItem(item, Modifier.animateItem())
 
-                AnimatedVisibility(index == pageableState.items.lastIndex && isFetchingNext) {
+                AnimatedVisibility(index == pageableState.items.value.lastIndex && isFetchingNext) {
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -348,7 +348,7 @@ fun NonPlaceholderIndexBasedPaginatedList(
                 pageWeJumpTo
                     ?.firstOrNull()
                     ?.let { firstItemOfTenthPage ->
-                        val index = pageableState.items.indexOf(firstItemOfTenthPage)
+                        val index = pageableState.items.value.indexOf(firstItemOfTenthPage)
 
                         if (index != -1) {
                             listState.animateScrollToItem(index)
@@ -382,7 +382,7 @@ fun NonPlaceholderIndexBasedPaginatedList(
 
                 SampleListItem(item, Modifier)
 
-                AnimatedVisibility(index == pageableState.items.lastIndex && isFetchingNext) {
+                AnimatedVisibility(index == pageableState.items.value.lastIndex && isFetchingNext) {
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -420,7 +420,7 @@ fun IndexBasedPaginatedList(
                 pageWeJumpTo
                     ?.firstOrNull()
                     ?.let { firstItemOfTenthPage ->
-                        val index = pageableState.items.indexOf(firstItemOfTenthPage)
+                        val index = pageableState.items.value.indexOf(firstItemOfTenthPage)
 
                         if (index != -1) {
                             listState.animateScrollToItem(index)
@@ -454,7 +454,7 @@ fun IndexBasedPaginatedList(
 
                 SampleListItem(item, Modifier)
 
-                AnimatedVisibility(index == pageableState.items.lastIndex && isFetchingNext) {
+                AnimatedVisibility(index == pageableState.items.value.lastIndex && isFetchingNext) {
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -508,7 +508,7 @@ fun FixedCountPaginatedList(
 
             SampleListItem(item, Modifier)
 
-            AnimatedVisibility(index == pageableState.items.lastIndex && isFetchingNext) {
+            AnimatedVisibility(index == pageableState.items.value.lastIndex && isFetchingNext) {
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -559,7 +559,7 @@ fun KeyBasedPaginatedList(
 
             SampleListItem(item, Modifier)
 
-            AnimatedVisibility(index == pageableState.items.lastIndex && isFetchingNext) {
+            AnimatedVisibility(index == pageableState.items.value.lastIndex && isFetchingNext) {
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -616,7 +616,7 @@ fun IndexBasedPaginatedGrid(
 
             SampleListItem(item, Modifier)
 
-            AnimatedVisibility(index == pageableState.items.lastIndex && isFetchingNext) {
+            AnimatedVisibility(index == pageableState.items.value.lastIndex && isFetchingNext) {
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -672,7 +672,7 @@ fun IndexBasedPaginatedStaggeredGrid(
 
             SampleListItem(item, Modifier)
 
-            AnimatedVisibility(index == pageableState.items.lastIndex && isFetchingNext) {
+            AnimatedVisibility(index == pageableState.items.value.lastIndex && isFetchingNext) {
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
