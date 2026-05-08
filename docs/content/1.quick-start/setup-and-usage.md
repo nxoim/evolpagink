@@ -32,6 +32,7 @@ data class SongData( // public ui data structure
 interface SongSource {
     fun getPage(pageIndex: Int): Flow<List<SongData>>
 }
+```
 ::
 
 

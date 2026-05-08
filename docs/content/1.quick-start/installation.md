@@ -14,7 +14,7 @@ seo:
 
 ```toml [libs.versions.toml]
 [versions]
-evolpagink = "0.6.0"
+evolpagink = "0.6.1"
 
 [libraries]
 evolpaginkCompose = { module = "com.nxoim.evolpagink:compose", version.ref = "evolpagink" }
@@ -38,6 +38,6 @@ kotlin {
 
 ## Choosing the right module
 
-`evolpagink-core` - The pagination engine itself. No UI framework dependency. Use this if you're integrating with a non-Compose UI system or writing custom bindings.
+`core` - The pagination engine itself. No UI framework dependency. Use this if you're integrating with a non-Compose UI system or writing custom bindings.
 
-`evolpagink-compose` - Compose-specific extensions that provide `toState()` and `items()` overloads. Includes core automatically, so you only need this dependency if you're using Compose.
+`compose` - Compose-specific extensions that provide `toState()` and `items()` overloads. Includes core automatically, so you only need this dependency if you're using Compose.
