@@ -2,36 +2,36 @@ package com.nxoim.evolpagink.core
 
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 
 internal class ObservablePageStorage<Key : Any, PageItem>(
     private val storage: PageStorage<Key, PageItem>,
     private val onPageEvent: ((PageEvent<Key>) -> Unit)? = null
 ) {
+    private val mutex = Mutex()
     private val _pageSnapshots = MutableSharedFlow<Map<Key, List<PageItem>>>(replay = 1)
     val pageSnapshots = _pageSnapshots.asSharedFlow()
 
-    var pagesSnapshot: Map<Key, List<PageItem>> = storage.all
-        private set
+    suspend fun getSnapshot() = mutex.withLock { storage.all }
 
-    operator fun get(key: Key): List<PageItem>? = storage[key]
-    fun contains(key: Key): Boolean = storage.contains(key)
+    suspend fun getPageKeyForItem(item: PageItem): Key? =
+        mutex.withLock { storage.getPageKeyForItem(item) }
 
-    // bypass snapshot
-    fun getPageKeyForItem(item: PageItem): Key? = storage.getPageKeyForItem(item)
+    suspend fun updatePage(key: Key, items: List<PageItem>, emitSnapshot: Boolean) =
+        mutex.withLock {
+            storage[key] = items
+            if (emitSnapshot) emitSnapshot()
+            onPageEvent?.invoke(PageEvent.Loaded(key))
+        }
 
-    suspend fun updatePage(key: Key, items: List<PageItem>, emitSnapshot: Boolean) {
-        storage[key] = items
-        if (emitSnapshot) emitSnapshot()
-        onPageEvent?.invoke(PageEvent.Loaded(key))
-    }
-
-    suspend fun removePage(key: Key, emitSnapshot: Boolean) {
+    suspend fun removePage(key: Key, emitSnapshot: Boolean) = mutex.withLock {
         storage.remove(key)
         if (emitSnapshot) emitSnapshot()
         onPageEvent?.invoke(PageEvent.Unloaded(key))
     }
 
-    suspend fun clear(emitSnapshot: Boolean) {
+    suspend fun clear(emitSnapshot: Boolean) = mutex.withLock {
         val snap = storage.all
         storage.clear()
         if (emitSnapshot) emitSnapshot()
@@ -39,8 +39,6 @@ internal class ObservablePageStorage<Key : Any, PageItem>(
     }
 
     private suspend fun emitSnapshot() {
-        val snap = storage.all
-        pagesSnapshot = snap
-        _pageSnapshots.emit(snap)
+        _pageSnapshots.emit(storage.all)
     }
 }

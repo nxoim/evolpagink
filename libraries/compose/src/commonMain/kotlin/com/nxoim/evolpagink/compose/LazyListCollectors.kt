@@ -46,7 +46,7 @@ internal fun <Key : Any, PageItem> Pageable<Key, PageItem>.collectListStateIntoP
                         if (visiblePagedItems.isEmpty()) return@map null
 
                         val middleItem = visiblePagedItems.getOrNull(visiblePagedItems.size / 2)
-                        middleItem?.let(pageable.getPageKeyForItem)
+                        middleItem?.let { pageable.getPageKeyForItem(it) }
                     }
                     .distinctUntilChanged()
                     .collect() {
@@ -69,7 +69,7 @@ internal fun <Key : Any, PageItem> Pageable<Key, PageItem>.collectListStateIntoP
                         if (visiblePagedItems.isEmpty()) return@map emptyList()
 
                         val visiblePageKeys = visiblePagedItems
-                            .fastMapNotNull(pageable.getPageKeyForItem)
+                            .fastMapNotNull { pageable.getPageKeyForItem(it) }
                             .toSet()
                             .toList()
 

@@ -44,12 +44,15 @@ internal class Paginator<Key : Any, PageItem, Context>(
     private val _isFetchingNext = MutableStateFlow(false)
     val isFetchingNext = _isFetchingNext.asStateFlow()
 
+    // only used in collectPagesAndFlattenIntoItemList
     private var currentContext = contextFlow.value
 
     fun collectPagesAndFlattenIntoItemList(): Flow<List<PageItem>> = contextFlow
         .flatMapLatest { newContext ->
-            val oldPagesSnapshot = storage.pagesSnapshot
+            val oldPagesSnapshot = storage.getSnapshot()
 
+            // make sure to always reuse the cache if context
+            // didn't change since last subscription
             if (newContext !== currentContext) {
                 currentContext = newContext
                 pageCollectionJobTracker.clear()
@@ -68,8 +71,13 @@ internal class Paginator<Key : Any, PageItem, Context>(
 
     suspend fun preloadAndActivate(
         prefetchContext: CoroutineContext,
+        key: Key
+    ) = preloadAndActivate(prefetchContext, key, storage.getSnapshot())
+
+    private suspend fun preloadAndActivate(
+        prefetchContext: CoroutineContext,
         key: Key,
-        pagesSnapshot: Map<Key, List<PageItem>> = storage.pagesSnapshot
+        pagesSnapshot: Map<Key, List<PageItem>>
     ): List<PageItem>? = withContext(prefetchContext) {
         preloadMutex.withLock {
             val pageContents = pagesSnapshot[key] ?: onPage(currentContext, key)
@@ -88,8 +96,8 @@ internal class Paginator<Key : Any, PageItem, Context>(
         }
     }
 
-    fun updatePagesToCache(event: PageDisplayingEvent<Key>) {
-        val pagesSnapshot = storage.pagesSnapshot
+    suspend fun updatePagesToCache(event: PageDisplayingEvent<Key>) {
+        val pagesSnapshot = storage.getSnapshot()
 
         val newPages = strategy
             .calculatePages(
@@ -105,7 +113,7 @@ internal class Paginator<Key : Any, PageItem, Context>(
         _activePageKeys.update { mergeBridgedKeys(newPages, pagesSnapshot) }
     }
 
-    fun getPageKeyForItem(item: PageItem): Key? = storage.getPageKeyForItem(item)
+    suspend fun getPageKeyForItem(item: PageItem): Key? = storage.getPageKeyForItem(item)
 
     private fun collectAndFlattenPages(
         pagesSnapshotToBeginEmissionsFrom: Map<Key, List<PageItem>>
@@ -113,7 +121,7 @@ internal class Paginator<Key : Any, PageItem, Context>(
         val active = pageCollectionJobTracker.active
         val toCancel = active - pageKeys
 
-        pageKeys.forEach { launchPageCollectionIfNeeded(it, storage.pagesSnapshot) }
+        pageKeys.forEach { launchPageCollectionIfNeeded(it, storage.getSnapshot()) }
 
         toCancel.forEach { key ->
             pageCollectionJobTracker.cancelAndJoin(key)

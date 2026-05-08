@@ -45,7 +45,6 @@ fun <Key : Any, PageItem, Context> pageable(
     resultingItemsTransform: (List<PageItem>) -> List<PageItem> = { it },
     initialItems: List<PageItem> = emptyList(),
 ): Pageable<Key, PageItem> {
-
     val paginator = Paginator(
         coroutineScope,
         context,
@@ -61,7 +60,7 @@ fun <Key : Any, PageItem, Context> pageable(
             .stateIn(coroutineScope, WhileSubscribed(), initialItems),
         isFetchingPrevious = paginator.isFetchingPrevious,
         isFetchingNext = paginator.isFetchingNext,
-        getPageKeyForItem = { item -> paginator.getPageKeyForItem(item) },
+        getPageKeyForItem = paginator::getPageKeyForItem,
         jumpTo = { page ->
             paginator.preloadAndActivate(coroutineScope.coroutineContext, page)
         },
@@ -82,9 +81,9 @@ class Pageable<Key : Any, PageItem> internal constructor(
     val items: StateFlow<List<PageItem>>,
     val isFetchingPrevious: StateFlow<Boolean>,
     val isFetchingNext: StateFlow<Boolean>,
-    val getPageKeyForItem: (item: PageItem) -> Key?,
+    val getPageKeyForItem: suspend (item: PageItem) -> Key?,
     val jumpTo: suspend (key: Key) -> List<PageItem>?,
     @property:InternalPageableApi
     @Suppress("propertyName")
-    val _onEvent: (event: PageDisplayingEvent<Key>) -> Unit
+    val _onEvent: suspend (event: PageDisplayingEvent<Key>) -> Unit
 )

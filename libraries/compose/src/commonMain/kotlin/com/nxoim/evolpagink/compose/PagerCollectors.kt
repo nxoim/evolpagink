@@ -66,7 +66,7 @@ internal fun <Key : Any, PageItem> Pageable<Key, PageItem>.collectPagerStateInto
                         if (visiblePagedItems.isEmpty()) return@map emptyList()
 
                         val visiblePageKeys = visiblePagedItems
-                            .fastMapNotNull(pageable.getPageKeyForItem)
+                            .fastMapNotNull { pageable.getPageKeyForItem(it) }
                             .toSet()
                             .toList()
 
