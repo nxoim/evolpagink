@@ -65,7 +65,8 @@ internal class Paginator<Key : Any, PageItem, Context>(
                 )
             } // else reuse current
 
-            collectAndFlattenPages(pagesSnapshotToBeginEmissionsFrom = oldPagesSnapshot)
+            // pass old snapshot, pre `storage.clear()`, as initial for emissions
+            newContext.collectAndFlattenPages(initialSnapshot = oldPagesSnapshot)
         }
         .onCompletion { stopPageCollections() }
 
@@ -115,13 +116,11 @@ internal class Paginator<Key : Any, PageItem, Context>(
 
     suspend fun getPageKeyForItem(item: PageItem): Key? = storage.getPageKeyForItem(item)
 
-    private fun collectAndFlattenPages(
-        pagesSnapshotToBeginEmissionsFrom: Map<Key, List<PageItem>>
-    ): Flow<List<PageItem>> = activePageKeys.flatMapLatest { pageKeys ->
-        val active = pageCollectionJobTracker.active
-        val toCancel = active - pageKeys
-
-        pageKeys.forEach { launchPageCollectionIfNeeded(it, storage.getSnapshot()) }
+    private fun Context.collectAndFlattenPages(
+        initialSnapshot: Map<Key, List<PageItem>>
+    ): Flow<List<PageItem>> = activePageKeys.flatMapLatest { newPageKeys ->
+        val currentlyActiveKeys = pageCollectionJobTracker.active
+        val toCancel = currentlyActiveKeys - newPageKeys.toSet()
 
         toCancel.forEach { key ->
             pageCollectionJobTracker.cancelAndJoin(key)
@@ -129,27 +128,35 @@ internal class Paginator<Key : Any, PageItem, Context>(
         }
 
         storage.pageSnapshots
-            .onStart { emit(pagesSnapshotToBeginEmissionsFrom) }
+            .onStart { emit(initialSnapshot) }
             .map { pagesSnapshot ->
-                pageKeys.flatMap { pagesSnapshot[it].orEmpty() }
+                newPageKeys.flatMap { pageKey ->
+                    launchPageCollectionIfNeeded(pageKey, pagesSnapshot)
+
+                    pagesSnapshot[pageKey].orEmpty()
+                }
             }
     }
 
-    private fun launchPageCollectionIfNeeded(
+    private fun Context.launchPageCollectionIfNeeded(
         key: Key,
         pagesSnapshot: Map<Key, List<PageItem>>
     ) {
         pageCollectionJobTracker.launchIfIdle(key, scope) {
-            val isFirstItem = { _activePageKeys.value.firstOrNull() == key }
-            val isLastItem = { _activePageKeys.value.lastOrNull() == key }
+            fun isFirstItem() = (_activePageKeys.value.firstOrNull() == key)
+            fun isLastItem() = (_activePageKeys.value.lastOrNull() == key)
 
             currentContext.onPage(key)
                 .cancellable()
                 .onStart {
                     if (!pagesSnapshot.contains(key)) {
                         onPageEvent?.invoke(PageEvent.Loading(key))
-                        if (isFirstItem()) _isFetchingPrevious.value = true
-                        if (isLastItem()) _isFetchingNext.value = true
+                        if (isFirstItem() && isPreviousPageExpected(key)){
+                            _isFetchingPrevious.value = true
+                        }
+                        if (isLastItem() && isNextPageExpected(key)) {
+                            _isFetchingNext.value = true
+                        }
                     }
                 }
                 .collect { items ->
@@ -169,26 +176,40 @@ internal class Paginator<Key : Any, PageItem, Context>(
         pagesSnapshot: Map<Key, List<PageItem>>
     ): List<Key> {
         val bridged = MutableScatterSet<Key>()
-        for (i in 0 until target.lastIndex) {
-            var k = strategy.onNextPage(currentContext, target[i])
-            while (k != null && k != target[i + 1]) {
-                if (pagesSnapshot.contains(k) || pageCollectionJobTracker.isActive(k)) bridged.add(k)
-                k = strategy.onNextPage(currentContext, k)
+
+        for (index in 0 until target.lastIndex) {
+            var key = strategy.onNextPage(currentContext, target[index])
+
+            while (key != null && key != target[index + 1]) {
+                if (pagesSnapshot.contains(key) || pageCollectionJobTracker.isActive(key)) {
+                    bridged.add(key)
+                }
+                key = strategy.onNextPage(currentContext, key)
             }
         }
+
         val merged = ArrayList<Key>(target.size + bridged.size)
-        for (i in target.indices) {
-            merged.add(target[i])
-            if (i < target.lastIndex) {
-                var k = strategy.onNextPage(currentContext, target[i])
-                while (k != null && k != target[i + 1]) {
-                    if (k in bridged) merged.add(k)
-                    k = strategy.onNextPage(currentContext, k)
+
+        for (index in target.indices) {
+            merged.add(target[index])
+
+            if (index < target.lastIndex) {
+                var nextKey = strategy.onNextPage(currentContext, target[index])
+
+                while (nextKey != null && nextKey != target[index + 1]) {
+                    if (nextKey in bridged) merged.add(nextKey)
+                    nextKey = strategy.onNextPage(currentContext, nextKey)
                 }
             }
         }
-        return merged.distinct()
+
+        return merged
     }
+
+    private fun Context.isNextPageExpected(key: Key): Boolean =
+        strategy.onNextPage(this, key) != null
+    private fun Context.isPreviousPageExpected(key: Key): Boolean =
+        strategy.onPreviousPage(this, key) != null
 
     private suspend fun stopPageCollections() {
         pageCollectionJobTracker.clear()

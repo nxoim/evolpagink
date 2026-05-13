@@ -44,15 +44,12 @@ const showSample = useMediaQuery("(min-width: 1024px)");
             </div>
         </div>
 
-        <Transition name="sample">
-            <div v-if="showSample" class="right-section">
-                <i
-                    frame
-                    src="/other/sample/index.html"
-                    class="w-full h-full border border-accented rounded-xl shadow-lg"
-                />
-            </div>
-        </Transition>
+        <div v-if="showSample" class="right-section">
+            <iframe
+                src="/other/sample/index.html"
+                class="w-full h-full border border-accented rounded-xl shadow-lg"
+            />
+        </div>
     </div>
 </template>
 
@@ -134,4 +131,3 @@ const showSample = useMediaQuery("(min-width: 1024px)");
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
 }
 </style>
-

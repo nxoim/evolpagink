@@ -1,6 +1,7 @@
 package com.nxoim.evolpagink.core
 
 import androidx.collection.MutableScatterMap
+import androidx.collection.MutableScatterSet
 
 
 internal interface PageStorage<Key : Any, PageItem> {
@@ -27,9 +28,31 @@ internal class ScatterMapPageStorage<Key : Any, PageItem> : PageStorage<Key, Pag
 
     override fun get(key: Key): List<PageItem>? = pageCache[key]
 
+    // will also deduplicate
     override fun set(key: Key, page: List<PageItem>) {
+        var stolenByPage: MutableScatterMap<Key, MutableScatterSet<PageItem>>? = null
+
+        page.forEach { item ->
+            val currentOwner = itemToPageKeyCache[item]
+            if (currentOwner != null && currentOwner != key) {
+                val map = stolenByPage
+                    ?: MutableScatterMap<Key, MutableScatterSet<PageItem>>().also {
+                        stolenByPage = it
+                    }
+                map
+                    .getOrPut(currentOwner) { MutableScatterSet() }
+                    .add(item)
+            }
+            itemToPageKeyCache[item] = key
+        }
+
+        stolenByPage?.forEach { ownerKey, stolen ->
+            val existing = pageCache[ownerKey] ?: return@forEach
+            val trimmed = existing.filter { it !in stolen }
+            if (trimmed.isEmpty()) pageCache.remove(ownerKey) else pageCache[ownerKey] = trimmed
+        }
+
         pageCache[key] = page
-        page.forEach { item -> itemToPageKeyCache[item] = key }
     }
 
     // create non backed snapshot. read .asMap() docs
