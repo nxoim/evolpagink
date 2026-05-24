@@ -9,24 +9,24 @@ plugins {
 
 kotlin {
     jvm()
-    androidTarget()
+    android {
+        configureCompileAndMinSdkForLibrary(
+            namespace = "$evolpaginkPackageName.core"
+        )
+    }
     wasmJs() {
         browser()
         nodejs()
     }
-    macosX64()
     macosArm64()
-    iosX64()
     iosArm64()
     iosSimulatorArm64()
     tvosArm64()
     tvosSimulatorArm64()
-    tvosX64()
     watchosArm32()
     watchosArm64()
     watchosDeviceArm64()
     watchosSimulatorArm64()
-    watchosX64()
     linuxArm64()
     linuxX64()
     mingwX64()
@@ -56,23 +56,9 @@ kotlin {
 
         }
 
-        androidMain.dependencies {
-
-        }
-
         jvmMain.dependencies {
 
         }
-    }
-}
-
-android {
-    namespace = "$evolpaginkPackageName.core"
-
-    configureCompileAndMinSdkForLibrary()
-
-    compileOptions {
-        configureJava()
     }
 }
 

@@ -1,16 +1,17 @@
 import com.android.build.api.dsl.AndroidSourceSet
 import com.android.build.api.dsl.ApkSigningConfig
 import com.android.build.api.dsl.ApplicationBuildType
-import com.android.build.gradle.LibraryExtension
-import com.android.build.gradle.internal.dsl.BaseAppModuleExtension
+import com.android.build.api.dsl.ApplicationExtension
+import com.android.build.api.dsl.KotlinMultiplatformAndroidLibraryTarget
+import com.android.build.api.dsl.LibraryExtension
 import org.gradle.api.NamedDomainObjectContainer
 
 object AndroidBuildStuff {
-    const val compileSdk = 36
+    const val compileSdk = 37
     const val minSdk = 24
 }
 
-inline fun BaseAppModuleExtension.configureCompileAndMinSdkForApp(
+inline fun ApplicationExtension.configureCompileAndMinSdkForApp(
     applicationId: String,
     versionCode: Int,
     versionName: String
@@ -28,14 +29,7 @@ inline fun BaseAppModuleExtension.configureCompileAndMinSdkForApp(
 }
 
 
-inline fun AndroidSourceSet.configureDefaultAndroidSourceSets() {
-    manifest.srcFile("src/androidMain/AndroidManifest.xml")
-    res.srcDirs("src/androidMain/resources")
-    resources.srcDirs("src/commonMain/resources")
-}
-
-
-inline fun BaseAppModuleExtension.getDebugSigningConfig() = signingConfigs.getByName("debug")
+inline fun ApplicationExtension.getDebugSigningConfig() = signingConfigs.getByName("debug")
 
 inline fun NamedDomainObjectContainer<ApplicationBuildType>.configureReleaseBuild(signingConfig: ApkSigningConfig?) {
     getByName("release") {
@@ -46,13 +40,12 @@ inline fun NamedDomainObjectContainer<ApplicationBuildType>.configureReleaseBuil
 }
 
 
-inline fun LibraryExtension.configureCompileAndMinSdkForLibrary() {
-    compileSdk = AndroidBuildStuff.compileSdk
-
-    defaultConfig {
-        minSdk = AndroidBuildStuff.minSdk
-        testOptions.targetSdk = AndroidBuildStuff.compileSdk
-    }
+inline fun KotlinMultiplatformAndroidLibraryTarget.configureCompileAndMinSdkForLibrary(
+    namespace: String
+) {
+    this.namespace = namespace
+    compileSdk { version = release(AndroidBuildStuff.compileSdk) }
+    minSdk { version = release(AndroidBuildStuff.minSdk) }
 }
 
 inline fun LibraryExtension.configureBenchmark() {

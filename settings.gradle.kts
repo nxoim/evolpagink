@@ -1,6 +1,7 @@
 rootProject.name = "evolpagink"
 
-include(":sample:composeApp")
+include(":sample:shared")
+include(":sample:android")
 include(":microbenchmark")
 include(":libraries:core")
 include(":libraries:compose")

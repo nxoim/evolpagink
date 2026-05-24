@@ -1,21 +1,14 @@
 plugins {
-    alias(libs.plugins.android.library)
+    alias(libs.plugins.android.library2)
     alias(libs.plugins.androidx.benchmark)
-    alias(libs.plugins.multiplatform)
-}
-
-kotlin {
-    jvmToolchain()
-    androidTarget()
 }
 
 android {
     namespace = "$evolpaginkPackageName.microbenchmark"
 
-    sourceSets["main"].manifest.srcFile("src/main/AndroidManifest.xml")
-
     configureBenchmark()
 }
+
 
 dependencies {
     androidTestImplementation(projects.libraries.core)

@@ -5,6 +5,7 @@ plugins {
     alias(libs.plugins.kotlinx.serialization).apply(false)
     alias(libs.plugins.compose.compiler).apply(false)
     alias(libs.plugins.android.library).apply(false)
+    alias(libs.plugins.android.library2).apply(false)
     alias(libs.plugins.androidx.benchmark).apply(false)
     alias(libs.plugins.publishOnCentral).apply(false)
     alias(libs.plugins.dokka) // apply to root
@@ -16,8 +17,8 @@ dependencies { // include modules for root build/dokka/html output
 }
 
 tasks.register<Copy>("copyWasmSample") {
-    dependsOn("${projects.sample.composeApp.path}:wasmJsBrowserDistribution")
-    from(project(projects.sample.composeApp.path).layout.buildDirectory.dir("dist/wasmJs/productionExecutable"))
+    dependsOn("${projects.sample.shared.path}:wasmJsBrowserDistribution")
+    from(project(projects.sample.shared.path).layout.buildDirectory.dir("dist/wasmJs/productionExecutable"))
     into(rootProject.layout.projectDirectory.dir("docs/public/other/sample"))
 }
 
