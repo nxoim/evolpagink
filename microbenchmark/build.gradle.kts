@@ -1,14 +1,10 @@
+import convention.setupMicrobenchmark
+
 plugins {
-    alias(libs.plugins.android.library2)
-    alias(libs.plugins.androidx.benchmark)
+    alias(libs.plugins.android.libraryLegacy)
 }
 
-android {
-    namespace = "$evolpaginkPackageName.microbenchmark"
-
-    configureBenchmark()
-}
-
+setupMicrobenchmark()
 
 dependencies {
     androidTestImplementation(projects.libraries.core)
@@ -17,7 +13,6 @@ dependencies {
     androidTestImplementation(libs.androidx.benchmark.junit)
     androidTestImplementation(libs.androidx.benchmark.macro)
     androidTestImplementation(libs.kotlinx.coroutines.core)
-
     androidTestImplementation(libs.kotlinx.coroutines.test)
     androidTestImplementation(libs.androidx.test.core)
     androidTestImplementation(libs.androidx.test.junit)

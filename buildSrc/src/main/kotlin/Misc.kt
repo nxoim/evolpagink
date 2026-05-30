@@ -1,1 +1,0 @@
-const val evolpaginkPackageName = "com.nxoim.evolpagink"

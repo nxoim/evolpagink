@@ -1,0 +1,46 @@
+package evolpagink.convention
+
+import org.danilopianini.gradle.mavencentral.PublishOnCentralExtension
+import org.gradle.api.Project
+import org.gradle.api.publish.PublishingExtension
+import org.gradle.api.publish.maven.MavenPublication
+import org.gradle.kotlin.dsl.configure
+import org.gradle.kotlin.dsl.withType
+
+fun Project.setupPublishing(
+    artifactId: String = this.name,
+    block: PublishOnCentralExtension.() -> Unit = { },
+) {
+    pluginManager.apply("org.danilopianini.publish-on-central")
+    pluginManager.apply("org.jetbrains.dokka")
+    pluginManager.apply("com.nxoim.gradle.publish")
+
+    extensions.configure<PublishOnCentralExtension> {
+        repoOwner.set("nxoim")
+        projectLongName.set("Multiplatform pagination library")
+        projectDescription.set(description)
+        licenseName.set("The Apache License, Version 2.0")
+        licenseUrl.set("https://www.apache.org/licenses/LICENSE-2.0.txt")
+        projectUrl.set("https://github.com/nxoim/evolpagink")
+        scmConnection.set("scm:git:https://github.com/nxoim/evolpagink.git")
+        block()
+    }
+
+    pluginManager.withPlugin("org.gradle.maven-publish") {
+        extensions.configure<PublishingExtension> {
+            publications.withType<MavenPublication>().configureEach {
+                this.artifactId = artifactId
+
+                pom {
+                    developers {
+                        developer {
+                            id.set("nxoim")
+                            name.set("nxoim")
+                            email.set("reach@nxoim.com")
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

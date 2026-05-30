@@ -5,9 +5,10 @@ plugins {
     alias(libs.plugins.kotlinx.serialization).apply(false)
     alias(libs.plugins.compose.compiler).apply(false)
     alias(libs.plugins.android.library).apply(false)
-    alias(libs.plugins.android.library2).apply(false)
+    alias(libs.plugins.android.libraryLegacy).apply(false)
     alias(libs.plugins.androidx.benchmark).apply(false)
     alias(libs.plugins.publishOnCentral).apply(false)
+    id("com.nxoim.gradle.global")
     alias(libs.plugins.dokka) // apply to root
 }
 

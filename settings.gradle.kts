@@ -1,3 +1,5 @@
+includeBuild("build-logic")
+
 rootProject.name = "evolpagink"
 
 include(":sample:shared")
