@@ -5,6 +5,10 @@ package com.nxoim.evolpagink.core
 import androidx.collection.MutableScatterSet
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.async
+import kotlinx.coroutines.cancelAndJoin
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -16,11 +20,9 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.sync.Mutex
-import kotlinx.coroutines.sync.withLock
-import kotlinx.coroutines.withContext
 import kotlin.concurrent.atomics.ExperimentalAtomicApi
 import kotlin.coroutines.CoroutineContext
+import kotlin.coroutines.cancellation.CancellationException
 
 @OptIn(ExperimentalCoroutinesApi::class)
 internal class Paginator<Key : Any, PageItem, Context>(
@@ -35,7 +37,7 @@ internal class Paginator<Key : Any, PageItem, Context>(
         onPageEvent
     )
     private val pageCollectionJobTracker = PageJobTracker<Key>()
-    private val preloadMutex = Mutex()
+    private var jumpJob: Job? = null
     private val _activePageKeys = MutableStateFlow(listOf(strategy.initialPage(contextFlow.value)))
     val activePageKeys = _activePageKeys.asStateFlow()
 
@@ -79,21 +81,31 @@ internal class Paginator<Key : Any, PageItem, Context>(
         prefetchContext: CoroutineContext,
         key: Key,
         pagesSnapshot: Map<Key, List<PageItem>>
-    ): List<PageItem>? = withContext(prefetchContext) {
-        preloadMutex.withLock {
+    ): List<PageItem>? {
+        jumpJob?.cancelAndJoin()
+
+        val deferred = scope.async(prefetchContext) {
             val pageContents = pagesSnapshot[key] ?: onPage(currentContext, key)
                 .firstOrNull()
                 .also {
-                    if (it != null)
-                        storage.updatePage(key, it, true)
-                    else
-                        storage.removePage(key, true)
+                    ensureActive()
+                    if (it != null) storage.updatePage(key, it, true)
+                    else storage.removePage(key, true)
                 }
 
+            ensureActive()
             // call with mocked event to trigger user defined
             // preload strategies as well
             updatePagesToCache(PageDisplayingEvent.PageAnchorChanged(key))
             pageContents
+        }
+
+        jumpJob = deferred
+
+        return try {
+            deferred.await()
+        } catch (e: CancellationException) {
+            null // superseded by a newer jump
         }
     }
 
