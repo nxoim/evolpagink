@@ -121,6 +121,15 @@ object SongItemShape {
     val First = RoundedCornerShape(18.dp, 18.dp, 8.dp, 8.dp)
     val Middle = RoundedCornerShape(8.dp)
     val Last = RoundedCornerShape(8.dp, 8.dp, 18.dp, 18.dp)
+
+    fun auto(
+        index: Int,
+        listSize: Int
+    ): RoundedCornerShape = when (index) {
+        0 -> First
+        listSize - 1 -> Last
+        else -> Middle
+    }
 }
 
 @Preview
