@@ -12,7 +12,7 @@
             android:configChanges="assetsPaths|colorMode|density|fontScale|fontWeightAdjustment|grammaticalGender|keyboard|keyboardHidden|layoutDirection|locale|mcc|mnc|navigation|orientation|resourcesUnused|screenLayout|screenSize|smallestScreenSize|touchscreen|uiMode"
             android:exported="true"
             android:launchMode="singleInstance"
-            android:windowSoftInputMode="adjustPan">
+            android:windowSoftInputMode="adjustNothing">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
