@@ -9,6 +9,7 @@ import org.gradle.kotlin.dsl.withType
 
 fun Project.setupPublishing(
     artifactId: String = this.name,
+    description: String = "Multiplatform pagination library",
     block: PublishOnCentralExtension.() -> Unit = { },
 ) {
     pluginManager.apply("org.danilopianini.publish-on-central")
@@ -17,7 +18,7 @@ fun Project.setupPublishing(
 
     extensions.configure<PublishOnCentralExtension> {
         repoOwner.set("nxoim")
-        projectLongName.set("Multiplatform pagination library")
+        projectLongName.set("evolpagink - Multiplatform pagination library")
         projectDescription.set(description)
         licenseName.set("The Apache License, Version 2.0")
         licenseUrl.set("https://www.apache.org/licenses/LICENSE-2.0.txt")
@@ -32,6 +33,8 @@ fun Project.setupPublishing(
                 this.artifactId = artifactId
 
                 pom {
+                    this.description.set(description)
+
                     developers {
                         developer {
                             id.set("nxoim")
