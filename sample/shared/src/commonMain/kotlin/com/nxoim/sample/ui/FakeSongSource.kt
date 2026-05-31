@@ -46,6 +46,8 @@ class FakeSongSource(
                         emit(result.toList())
                     }
                 } else {
+                    delay(fakeRandom.nextLong(10, 300).milliseconds)
+
                     emit(tracks.mapIndexed { index, track -> ItemData.Loaded(track, amount.first + index) })
                 }
             }
@@ -152,7 +154,7 @@ private val fakeRandom = Random(seed = 42)
 @OptIn(ExperimentalUuidApi::class)
 private fun generateFakeTracks(count: Int): List<Track> = (1..count).map { index ->
     Track(
-        id = "track_$index",
+        id = Uuid.random().toHexString(),
         title = "Track $index",
         artist = artists.random(fakeRandom),
         album = albums.random(fakeRandom),

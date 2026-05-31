@@ -7,7 +7,6 @@ import kotlinx.coroutines.sync.withLock
 
 internal class ObservablePageStorage<Key : Any, PageItem>(
     private val storage: PageStorage<Key, PageItem>,
-    private val onPageEvent: ((PageEvent<Key>) -> Unit)? = null
 ) {
     private val mutex = Mutex()
     private val _pageSnapshots = MutableSharedFlow<Map<Key, List<PageItem>>>(replay = 1)
@@ -22,20 +21,16 @@ internal class ObservablePageStorage<Key : Any, PageItem>(
         mutex.withLock {
             storage[key] = items
             if (emitSnapshot) emitSnapshot()
-            onPageEvent?.invoke(PageEvent.Loaded(key))
         }
 
     suspend fun removePage(key: Key, emitSnapshot: Boolean) = mutex.withLock {
         storage.remove(key)
         if (emitSnapshot) emitSnapshot()
-        onPageEvent?.invoke(PageEvent.Unloaded(key))
     }
 
     suspend fun clear(emitSnapshot: Boolean) = mutex.withLock {
-        val snap = storage.all
         storage.clear()
         if (emitSnapshot) emitSnapshot()
-        snap.keys.forEach { onPageEvent?.invoke(PageEvent.Unloaded(it)) }
     }
 
     private suspend fun emitSnapshot() {

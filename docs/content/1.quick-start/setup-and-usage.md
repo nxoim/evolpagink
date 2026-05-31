@@ -45,6 +45,7 @@ class SongListModel(source: SongSource, coroutineScope: CoroutineScope) {
     val songPageable = pageable(
         coroutineScope,
         onPage = { index -> source.getPage(index) },
+        pageItemKey = { it.id },
         strategy = prefetchPageAmount( // one of the default strategies
             initialPage = 0, 
             minimumPageAmount = 2
@@ -61,8 +62,7 @@ class SongListModel(source: SongSource, coroutineScope: CoroutineScope) {
 ```kotlin
 val lazyListState = rememberLazyListState()
 val pageableState = songListModel.songPageable.toState(
-    lazyListState,
-    key = { item -> item.id }
+    lazyListState
 )
 ```
 ::
@@ -108,6 +108,7 @@ class SongListModel(
     val songPageable = pageable(
         coroutineScope,
         onPage = { index -> source.getPage(index) },
+        pageItemKey = { it.id },
         strategy = prefetchPageAmount( // one of the default strategies
             initialPage = 0, 
             minimumPageAmount = 2
@@ -121,14 +122,12 @@ class SongListModel(
 @Composable
 fun SongListScreen(model: SongListModel) {
     val lazyListState = rememberLazyListState()
-    val pageableState = model.songPageable.toState(
-        lazyListState, // will be observed for automatic pageable state updates
-        key = { item -> item.id }
-    )
+    val pageableState = model.songPageable.toState(lazyListState)
 
     LazyColumn(lazyListState) { // dont forget to use the state
         // this is an overload that automatically 
-        // uses the key lambda from .toState above
+        // uses the key lambda specified in model's pageable
+        // declaration, in pageItemKey
         items(pageableState) { song ->
             SongItem(song)
         }

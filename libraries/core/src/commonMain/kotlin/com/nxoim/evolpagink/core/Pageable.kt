@@ -5,20 +5,23 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharingStarted.Companion.WhileSubscribed
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlin.concurrent.atomics.ExperimentalAtomicApi
 
 /**
- * Creates a [Pageable] with integer-based page keys starting from 0.
+ * Creates an empty-context [Pageable].
+ *
+ * @param coroutineScope Scope that will be used for all the work.
+ * @param onPage Factory of page flows. A page that is empty is treated as valid, a page that is null is treated as loading.
+ * @param strategy Strategy for compositing a list of pages to load.
+ * @param initialItems Items that will be displayed before any page data is collected.
+ * @param pageItemKey Key factory for tracking items in storage and UI.
  */
 @OptIn(InternalPageableApi::class)
 fun <Key : Any, PageItem : Any> pageable(
     coroutineScope: CoroutineScope,
     onPage: Unit.(key: Key) -> Flow<List<PageItem>?>,
     strategy: PageFetchStrategy<Key, PageItem, Unit>,
-    onPageEvent: ((event: PageEvent<Key>) -> Unit)? = null,
-    resultingItemsTransform: (List<PageItem>) -> List<PageItem> = { it },
     initialItems: List<PageItem> = emptyList(),
     pageItemKey: (PageItem) -> Any = { it }
 ) = pageable(
@@ -26,8 +29,6 @@ fun <Key : Any, PageItem : Any> pageable(
     context = singleEmissionStateFlowOfUnit,
     onPage = onPage,
     strategy = strategy,
-    onPageEvent = onPageEvent,
-    resultingItemsTransform = resultingItemsTransform,
     initialItems = initialItems,
     pageItemKey = pageItemKey
 )
@@ -36,6 +37,13 @@ fun <Key : Any, PageItem : Any> pageable(
  * Creates a [Pageable] that can react to changes in the provided context.
  *
  * When the context emits a new value, any currently cached pages are invalidated and re-fetched.
+ *
+ * @param coroutineScope Scope that will be used for all the work.
+ * @param context Context for page updates and strategy calculations. Context changes trigger a reload.
+ * @param onPage Factory of page flows. A page that is empty is treated as valid, a page that is null is treated as loading.
+ * @param strategy Strategy for compositing a list of pages to load.
+ * @param initialItems Items that will be displayed before any page data is collected.
+ * @param pageItemKey Key factory for tracking items in storage and UI.
  */
 @OptIn(InternalPageableApi::class, ExperimentalAtomicApi::class, ExperimentalCoroutinesApi::class)
 fun <Key : Any, PageItem : Any, Context> pageable(
@@ -43,8 +51,6 @@ fun <Key : Any, PageItem : Any, Context> pageable(
     context: StateFlow<Context>,
     onPage: Context.(key: Key) -> Flow<List<PageItem>?>,
     strategy: PageFetchStrategy<Key, PageItem, Context>,
-    onPageEvent: ((event: PageEvent<Key>) -> Unit)? = null,
-    resultingItemsTransform: (List<PageItem>) -> List<PageItem> = { it },
     initialItems: List<PageItem> = emptyList(),
     pageItemKey: (PageItem) -> Any = { it }
 ): Pageable<Key, PageItem> {
@@ -53,14 +59,12 @@ fun <Key : Any, PageItem : Any, Context> pageable(
         context,
         onPage,
         strategy,
-        onPageEvent,
         pageItemKey
     )
 
     return Pageable(
         items = paginator
             .collectPagesAndFlattenIntoItemList()
-            .map(resultingItemsTransform)
             .stateIn(coroutineScope, WhileSubscribed(), initialItems),
         isFetchingPrevious = paginator.isFetchingPrevious,
         isFetchingNext = paginator.isFetchingNext,

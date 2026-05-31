@@ -30,12 +30,10 @@ internal class Paginator<Key : Any, PageItem, Context>(
     private val contextFlow: StateFlow<Context>,
     private val onPage: Context.(Key) -> Flow<List<PageItem>?>,
     private val strategy: PageFetchStrategy<Key, PageItem, Context>,
-    private val onPageEvent: ((PageEvent<Key>) -> Unit)?,
     private val pageItemKey: (PageItem) -> Any
 ) {
     private val storage = ObservablePageStorage<Key, PageItem>(
-        ScatterMapPageStorage(pageItemKey),
-        onPageEvent
+        ScatterMapPageStorage(pageItemKey)
     )
     private val pageCollectionJobTracker = PageJobTracker<Key>()
     private var jumpJob: Job? = null
@@ -162,7 +160,6 @@ internal class Paginator<Key : Any, PageItem, Context>(
                 .cancellable()
                 .onStart {
                     if (!pagesSnapshot.contains(key)) {
-                        onPageEvent?.invoke(PageEvent.Loading(key))
                         if (isFirstItem() && isPreviousPageExpected(key)) {
                             _isFetchingPrevious.value = true
                         }

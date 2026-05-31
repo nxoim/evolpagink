@@ -83,7 +83,7 @@ fun <Key : Any, PageItem, Context> prefetchPageAmount(
 ////////////////////////////////////////////////////////////////////////////////////////////
 
 /**
- * Defines how pages should be prefetched based on what's currently displayed.
+ * Defines how pages should be fetched based on what's currently displayed.
  * 
  * Implementations determine which page keys need to be fetched given the current viewport state.
  */
