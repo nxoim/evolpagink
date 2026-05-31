@@ -46,13 +46,11 @@ internal class Paginator<Key : Any, PageItem, Context>(
     private val _isFetchingNext = MutableStateFlow(false)
     val isFetchingNext = _isFetchingNext.asStateFlow()
 
-    // only used in collectPagesAndFlattenIntoItemList
+    // only set in collectPagesAndFlattenIntoItemList
     private var currentContext = contextFlow.value
 
     fun collectPagesAndFlattenIntoItemList(): Flow<List<PageItem>> = contextFlow
         .flatMapLatest { newContext ->
-            val oldPagesSnapshot = storage.getSnapshot()
-
             // make sure to always reuse the cache if context
             // didn't change since last subscription
             if (newContext !== currentContext) {
@@ -67,8 +65,7 @@ internal class Paginator<Key : Any, PageItem, Context>(
                 )
             } // else reuse current
 
-            // pass old snapshot, pre `storage.clear()`, as initial for emissions
-            newContext.collectAndFlattenPages(initialSnapshot = oldPagesSnapshot)
+            newContext.collectAndFlattenPages()
         }
         .onCompletion { stopPageCollections() }
 
@@ -110,6 +107,7 @@ internal class Paginator<Key : Any, PageItem, Context>(
     }
 
     suspend fun updatePagesToCache(event: PageDisplayingEvent<Key>) {
+        val context = currentContext
         val pagesSnapshot = storage.getSnapshot()
 
         val newPages = strategy
@@ -117,38 +115,39 @@ internal class Paginator<Key : Any, PageItem, Context>(
                 PageFetchContext(
                     event = event,
                     pageCache = pagesSnapshot,
-                    externalContext = currentContext
+                    externalContext = context
                 )
             )
             .ifEmpty { activePageKeys.value }
-            .ifEmpty { listOf(strategy.initialPage(currentContext)) }
+            .ifEmpty { listOf(strategy.initialPage(context)) }
 
-        _activePageKeys.update { mergeBridgedKeys(newPages, pagesSnapshot) }
+        _activePageKeys.update {
+            mergeBridgedKeys(newPages, pagesSnapshot, context)
+        }
     }
 
     suspend fun getPageKeyForItem(item: PageItem): Key? = storage.getPageKeyForItem(item)
 
-    private fun Context.collectAndFlattenPages(
-        initialSnapshot: Map<Key, List<PageItem>>
-    ): Flow<List<PageItem>> = activePageKeys.flatMapLatest { newPageKeys ->
-        val currentlyActiveKeys = pageCollectionJobTracker.active
-        val toCancel = currentlyActiveKeys - newPageKeys.toSet()
+    private fun Context.collectAndFlattenPages(): Flow<List<PageItem>> =
+        activePageKeys.flatMapLatest { newPageKeys ->
+            val currentlyActiveKeys = pageCollectionJobTracker.active
+            val toCancel = currentlyActiveKeys - newPageKeys.toSet()
 
-        toCancel.forEach { key ->
-            pageCollectionJobTracker.cancelAndJoin(key)
-            storage.removePage(key, false)
-        }
-
-        storage.pageSnapshots
-            .onStart { emit(initialSnapshot) }
-            .map { pagesSnapshot ->
-                newPageKeys.flatMap { pageKey ->
-                    launchPageCollectionIfNeeded(pageKey, pagesSnapshot)
-
-                    pagesSnapshot[pageKey].orEmpty()
-                }
+            toCancel.forEach { key ->
+                pageCollectionJobTracker.cancelAndJoin(key)
+                storage.removePage(key, false)
             }
-    }
+
+            storage.pageSnapshots
+                .onStart { emit(storage.getSnapshot()) }
+                .map { pagesSnapshot ->
+                    newPageKeys.flatMap { pageKey ->
+                        launchPageCollectionIfNeeded(pageKey, pagesSnapshot)
+
+                        pagesSnapshot[pageKey].orEmpty()
+                    }
+                }
+        }
 
     private fun Context.launchPageCollectionIfNeeded(
         key: Key,
@@ -158,12 +157,12 @@ internal class Paginator<Key : Any, PageItem, Context>(
             fun isFirstItem() = (_activePageKeys.value.firstOrNull() == key)
             fun isLastItem() = (_activePageKeys.value.lastOrNull() == key)
 
-            currentContext.onPage(key)
+            onPage(key)
                 .cancellable()
                 .onStart {
                     if (!pagesSnapshot.contains(key)) {
                         onPageEvent?.invoke(PageEvent.Loading(key))
-                        if (isFirstItem() && isPreviousPageExpected(key)){
+                        if (isFirstItem() && isPreviousPageExpected(key)) {
                             _isFetchingPrevious.value = true
                         }
                         if (isLastItem() && isNextPageExpected(key)) {
@@ -185,18 +184,19 @@ internal class Paginator<Key : Any, PageItem, Context>(
 
     private fun mergeBridgedKeys(
         target: List<Key>,
-        pagesSnapshot: Map<Key, List<PageItem>>
+        pagesSnapshot: Map<Key, List<PageItem>>,
+        context: Context
     ): List<Key> {
         val bridged = MutableScatterSet<Key>()
 
         for (index in 0 until target.lastIndex) {
-            var key = strategy.onNextPage(currentContext, target[index])
+            var key = strategy.onNextPage(context, target[index])
 
             while (key != null && key != target[index + 1]) {
                 if (pagesSnapshot.contains(key) || pageCollectionJobTracker.isActive(key)) {
                     bridged.add(key)
                 }
-                key = strategy.onNextPage(currentContext, key)
+                key = strategy.onNextPage(context, key)
             }
         }
 
@@ -206,11 +206,11 @@ internal class Paginator<Key : Any, PageItem, Context>(
             merged.add(target[index])
 
             if (index < target.lastIndex) {
-                var nextKey = strategy.onNextPage(currentContext, target[index])
+                var nextKey = strategy.onNextPage(context, target[index])
 
                 while (nextKey != null && nextKey != target[index + 1]) {
                     if (nextKey in bridged) merged.add(nextKey)
-                    nextKey = strategy.onNextPage(currentContext, nextKey)
+                    nextKey = strategy.onNextPage(context, nextKey)
                 }
             }
         }
@@ -220,6 +220,7 @@ internal class Paginator<Key : Any, PageItem, Context>(
 
     private fun Context.isNextPageExpected(key: Key): Boolean =
         strategy.onNextPage(this, key) != null
+
     private fun Context.isPreviousPageExpected(key: Key): Boolean =
         strategy.onPreviousPage(this, key) != null
 

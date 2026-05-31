@@ -32,6 +32,12 @@ internal class ScatterMapPageStorage<Key : Any, PageItem> : PageStorage<Key, Pag
     override fun set(key: Key, page: List<PageItem>) {
         var stolenByPage: MutableScatterMap<Key, MutableScatterSet<PageItem>>? = null
 
+        pageCache[key]?.forEach { oldItem ->
+            if (itemToPageKeyCache[oldItem] == key && oldItem !in page) {
+                itemToPageKeyCache.remove(oldItem)
+            }
+        }
+
         page.forEach { item ->
             val currentOwner = itemToPageKeyCache[item]
             if (currentOwner != null && currentOwner != key) {
