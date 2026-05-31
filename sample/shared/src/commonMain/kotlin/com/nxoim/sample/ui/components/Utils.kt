@@ -225,7 +225,8 @@ fun ClearDropdownMenuGroup(onClick: () -> Unit) {
 @Composable
 fun Modifier.surfaceFadeGradient(fadeDown: Boolean): Modifier {
     val surface = MaterialTheme.colorScheme.surfaceColorAtElevation(8.dp)
-    val colors = remember(fadeDown) {
+
+    val colors = remember(fadeDown, surface) {
         if (fadeDown) {
             listOf(surface, Color.Transparent)
         } else {
