@@ -36,10 +36,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.unit.dp
 
 /**
@@ -223,15 +221,6 @@ fun ClearDropdownMenuGroup(onClick: () -> Unit) {
         )
     }
 }
-
-@Composable
-fun Modifier.controlShadow(shape: Shape, color: Color) =
-    this.shadow(
-        elevation = 8.dp,
-        shape = shape,
-        spotColor = color,
-        ambientColor = color
-    )
 
 @Composable
 fun Modifier.surfaceFadeGradient(fadeDown: Boolean): Modifier {

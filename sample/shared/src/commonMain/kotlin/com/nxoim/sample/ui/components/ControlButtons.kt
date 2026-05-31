@@ -20,6 +20,9 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.nxoim.sample.ui.theme.SampleTheme
@@ -32,7 +35,6 @@ fun ControlButtons(
     filterSharedElementKey: Any? = null,
     sortingSharedElementKey: Any? = null
 ) {
-    val shadowColor = MaterialTheme.colorScheme.surface
     val colors = IconButtonDefaults.filledTonalIconButtonColors(
         containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
     )
@@ -53,7 +55,7 @@ fun ControlButtons(
                         )
                     }
                     .size(54.dp)
-                    .controlShadow(FilterButtonShape, shadowColor),
+                    .controlShadow(FilterButtonShape),
                 colors = colors,
                 shape = FilterButtonShape,
             ) {
@@ -71,7 +73,7 @@ fun ControlButtons(
                         )
                     }
                     .size(54.dp)
-                    .controlShadow(SortButtonShape, shadowColor),
+                    .controlShadow(SortButtonShape),
                 colors = colors,
                 shape = SortButtonShape
             ) {
@@ -84,9 +86,6 @@ fun ControlButtons(
         )
     }
 }
-
-private val FilterButtonShape = RoundedCornerShape(32.dp, 8.dp, 8.dp, 32.dp)
-private val SortButtonShape = RoundedCornerShape(8.dp, 32.dp, 32.dp, 8.dp)
 
 @Preview
 @Composable
@@ -103,3 +102,14 @@ private fun ControlButtonsPreview() {
         }
     }
 }
+
+private val FilterButtonShape = RoundedCornerShape(32.dp, 8.dp, 8.dp, 32.dp)
+private val SortButtonShape = RoundedCornerShape(8.dp, 32.dp, 32.dp, 8.dp)
+@Composable
+private fun Modifier.controlShadow(shape: Shape, color: Color = Color.Black) =
+    this.shadow(
+        elevation = 8.dp,
+        shape = shape,
+        spotColor = color,
+        ambientColor = color
+    )
