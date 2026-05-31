@@ -31,9 +31,10 @@ internal class Paginator<Key : Any, PageItem, Context>(
     private val onPage: Context.(Key) -> Flow<List<PageItem>?>,
     private val strategy: PageFetchStrategy<Key, PageItem, Context>,
     private val onPageEvent: ((PageEvent<Key>) -> Unit)?,
+    private val pageItemKey: (PageItem) -> Any
 ) {
     private val storage = ObservablePageStorage<Key, PageItem>(
-        ScatterMapPageStorage(),
+        ScatterMapPageStorage(pageItemKey),
         onPageEvent
     )
     private val pageCollectionJobTracker = PageJobTracker<Key>()

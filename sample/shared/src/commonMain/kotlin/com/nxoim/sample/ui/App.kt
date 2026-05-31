@@ -102,7 +102,7 @@ private fun SongListContent(
 ) {
     val scope = rememberCoroutineScope()
     val listState = rememberLazyListState()
-    val pagedItems = model.pageable.toState(listState, key = { it.id })
+    val pagedItems = model.pageable.toState(listState)
     val isLoadingPrevious by model.pageable.isFetchingPrevious.collectAsState()
     val isLoadingNext by model.pageable.isFetchingNext.collectAsState()
 

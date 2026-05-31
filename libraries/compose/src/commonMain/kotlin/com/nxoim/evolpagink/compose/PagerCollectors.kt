@@ -23,7 +23,7 @@ import kotlin.coroutines.CoroutineContext
 internal fun <Key : Any, PageItem> Pageable<Key, PageItem>.collectPagerStateIntoPageable(
     state: PagerState,
     currentItemsState: State<List<PageItem>>,
-    key: (PageItem) -> Any,
+    key: (PageItem) -> Any = pageItemKey,
     coroutineContext: CoroutineContext,
     anchored: Boolean
 ): PageablePagerComposeState<PageItem> {

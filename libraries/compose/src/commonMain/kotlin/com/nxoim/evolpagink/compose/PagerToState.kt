@@ -20,10 +20,10 @@ import kotlin.jvm.JvmName
 @Composable
 @JvmName("toPagerStateVisible")
 fun <Key : Any, PageItem> Pageable<Key, PageItem>.toPagerState(
-    key: (PageItem) -> Any,
     initialPage: Int = 0,
     @FloatRange(from = -0.5, to = 0.5) initialPageOffsetFraction: Float = 0f,
-    coroutineContext: CoroutineContext = EmptyCoroutineContext
+    coroutineContext: CoroutineContext = EmptyCoroutineContext,
+    key: (PageItem) -> Any = pageItemKey
 ): PageablePagerComposeState<PageItem> {
     val currentItemsState = items.collectAsStateWithLifecycle()
 
@@ -50,11 +50,11 @@ fun <Key : Any, PageItem> Pageable<Key, PageItem>.toPagerState(
 @JvmName("toPagerStateVisibleDeprecated")
 @Deprecated(anchoredParamDeprecationNote, replaceWith = ReplaceWith("toPagerState(state, key)"))
 fun <Key : Any, PageItem> Pageable<Key, PageItem>.toPagerState(
-    key: (PageItem) -> Any,
     anchored: Boolean,
     initialPage: Int = 0,
     @FloatRange(from = -0.5, to = 0.5) initialPageOffsetFraction: Float = 0f,
-    coroutineContext: CoroutineContext = EmptyCoroutineContext
+    coroutineContext: CoroutineContext = EmptyCoroutineContext,
+    key: (PageItem) -> Any = pageItemKey
 ): PageablePagerComposeState<PageItem> {
     val currentItemsState = items.collectAsStateWithLifecycle()
 

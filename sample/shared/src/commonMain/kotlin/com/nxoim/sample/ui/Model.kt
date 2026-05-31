@@ -58,7 +58,8 @@ class Model(
                 context = this
             )
         },
-        strategy = prefetchMinimumItemAmount()
+        strategy = prefetchMinimumItemAmount(),
+        pageItemKey = { it.id }
     )
 
     private val lastJump = AtomicInt(-1)

@@ -13,13 +13,14 @@ import kotlin.concurrent.atomics.ExperimentalAtomicApi
  * Creates a [Pageable] with integer-based page keys starting from 0.
  */
 @OptIn(InternalPageableApi::class)
-fun <Key : Any, PageItem> pageable(
+fun <Key : Any, PageItem : Any> pageable(
     coroutineScope: CoroutineScope,
     onPage: Unit.(key: Key) -> Flow<List<PageItem>?>,
     strategy: PageFetchStrategy<Key, PageItem, Unit>,
     onPageEvent: ((event: PageEvent<Key>) -> Unit)? = null,
     resultingItemsTransform: (List<PageItem>) -> List<PageItem> = { it },
     initialItems: List<PageItem> = emptyList(),
+    pageItemKey: (PageItem) -> Any = { it }
 ) = pageable(
     coroutineScope = coroutineScope,
     context = singleEmissionStateFlowOfUnit,
@@ -27,7 +28,8 @@ fun <Key : Any, PageItem> pageable(
     strategy = strategy,
     onPageEvent = onPageEvent,
     resultingItemsTransform = resultingItemsTransform,
-    initialItems = initialItems
+    initialItems = initialItems,
+    pageItemKey = pageItemKey
 )
 
 /**
@@ -36,7 +38,7 @@ fun <Key : Any, PageItem> pageable(
  * When the context emits a new value, any currently cached pages are invalidated and re-fetched.
  */
 @OptIn(InternalPageableApi::class, ExperimentalAtomicApi::class, ExperimentalCoroutinesApi::class)
-fun <Key : Any, PageItem, Context> pageable(
+fun <Key : Any, PageItem : Any, Context> pageable(
     coroutineScope: CoroutineScope,
     context: StateFlow<Context>,
     onPage: Context.(key: Key) -> Flow<List<PageItem>?>,
@@ -44,13 +46,15 @@ fun <Key : Any, PageItem, Context> pageable(
     onPageEvent: ((event: PageEvent<Key>) -> Unit)? = null,
     resultingItemsTransform: (List<PageItem>) -> List<PageItem> = { it },
     initialItems: List<PageItem> = emptyList(),
+    pageItemKey: (PageItem) -> Any = { it }
 ): Pageable<Key, PageItem> {
     val paginator = Paginator(
         coroutineScope,
         context,
         onPage,
         strategy,
-        onPageEvent
+        onPageEvent,
+        pageItemKey
     )
 
     return Pageable(
@@ -64,7 +68,8 @@ fun <Key : Any, PageItem, Context> pageable(
         jumpTo = { page ->
             paginator.preloadAndActivate(coroutineScope.coroutineContext, page)
         },
-        _onEvent = { event -> paginator.updatePagesToCache(event) }
+        _onEvent = { event -> paginator.updatePagesToCache(event) },
+        pageItemKey = pageItemKey
     )
 }
 
@@ -75,6 +80,7 @@ fun <Key : Any, PageItem, Context> pageable(
  *
  * @param getPageKeyForItem Maps an item back to its page key. Returns null if the item isn't associated with a page.
  * @param jumpTo Loads and activates the specified page, returning its items. Subsequent fetches will be centered around this page.
+ * @param pageItemKey Provides key for an item from any loaded page. See [pageable].
  */
 @OptIn(InternalPageableApi::class)
 class Pageable<Key : Any, PageItem> internal constructor(
@@ -82,8 +88,9 @@ class Pageable<Key : Any, PageItem> internal constructor(
     val isFetchingPrevious: StateFlow<Boolean>,
     val isFetchingNext: StateFlow<Boolean>,
     val getPageKeyForItem: suspend (item: PageItem) -> Key?,
-    val jumpTo: suspend (key: Key) -> List<PageItem>?,
+    val jumpTo: suspend (Key) -> List<PageItem>?,
     @property:InternalPageableApi
     @Suppress("propertyName")
-    val _onEvent: suspend (event: PageDisplayingEvent<Key>) -> Unit
+    val _onEvent: suspend (PageDisplayingEvent<Key>) -> Unit,
+    val pageItemKey: (PageItem) -> Any
 )
