@@ -62,39 +62,56 @@ fun <Key : Any, PageItem : Any, Context> pageable(
         pageItemKey
     )
 
-    return Pageable(
-        items = paginator
+    return object : Pageable<Key, PageItem> {
+        override val items =  paginator
             .collectPagesAndFlattenIntoItemList()
-            .stateIn(coroutineScope, WhileSubscribed(), initialItems),
-        isFetchingPrevious = paginator.isFetchingPrevious,
-        isFetchingNext = paginator.isFetchingNext,
-        getPageKeyForItem = paginator::getPageKeyForItem,
-        jumpTo = { page ->
-            paginator.preloadAndActivate(coroutineScope.coroutineContext, page)
-        },
-        _onEvent = { event -> paginator.updatePagesToCache(event) },
-        pageItemKey = pageItemKey
-    )
+            .stateIn(coroutineScope, WhileSubscribed(), initialItems)
+        override val isFetchingPrevious = paginator.isFetchingPrevious
+        override val isFetchingNext = paginator.isFetchingNext
+
+        override suspend fun getPageKeyForItem(
+            item: PageItem
+        ): Key? = paginator.getPageKeyForItem(item)
+
+        override suspend fun jumpTo(
+            page: Key
+        ): List<PageItem>? = paginator.preloadAndActivate(page)
+
+        @InternalPageableApi
+        override suspend fun _onEvent(event: PageDisplayingEvent<Key>) {
+            paginator.updatePagesToCache(event)
+        }
+
+        override fun pageItemKey(item: PageItem): Any = pageItemKey(item)
+    }
 }
 
 /**
  * Represents a paginated data source with flattened items and fetching state.
  *
  * The item list automatically updates as pages are fetched based on the configured strategy.
- *
- * @param getPageKeyForItem Maps an item back to its page key. Returns null if the item isn't associated with a page.
- * @param jumpTo Loads and activates the specified page, returning its items. Subsequent fetches will be centered around this page.
- * @param pageItemKey Provides key for an item from any loaded page. See [pageable].
  */
-@OptIn(InternalPageableApi::class)
-class Pageable<Key : Any, PageItem> internal constructor(
-    val items: StateFlow<List<PageItem>>,
-    val isFetchingPrevious: StateFlow<Boolean>,
-    val isFetchingNext: StateFlow<Boolean>,
-    val getPageKeyForItem: suspend (item: PageItem) -> Key?,
-    val jumpTo: suspend (Key) -> List<PageItem>?,
-    @property:InternalPageableApi
-    @Suppress("propertyName")
-    val _onEvent: suspend (PageDisplayingEvent<Key>) -> Unit,
-    val pageItemKey: (PageItem) -> Any
-)
+interface Pageable<Key : Any, PageItem> {
+    val items: StateFlow<List<PageItem>>
+    val isFetchingPrevious: StateFlow<Boolean>
+    val isFetchingNext: StateFlow<Boolean>
+
+    /**
+     * Maps an item back to its page key. Returns null if the item isn't associated with a page.
+     */
+    suspend fun getPageKeyForItem(item: PageItem): Key?
+
+    /**
+     *  Loads and activates the specified page, returning its items. Subsequent fetches will be centered around this page.
+     */
+    suspend fun jumpTo(page: Key): List<PageItem>?
+
+    @InternalPageableApi
+    @Suppress("functionName")
+    suspend fun _onEvent(event: PageDisplayingEvent<Key>)
+
+    /**
+     * Provides key for an item from any loaded page. See [pageable].
+     */
+    fun pageItemKey(item: PageItem): Any
+}

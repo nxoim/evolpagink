@@ -21,7 +21,6 @@ import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.update
 import kotlin.concurrent.atomics.ExperimentalAtomicApi
-import kotlin.coroutines.CoroutineContext
 import kotlin.coroutines.cancellation.CancellationException
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -51,14 +50,14 @@ internal class Paginator<Key : Any, PageItem, Context>(
     fun collectPagesAndFlattenIntoItemList(): Flow<List<PageItem>> = contextFlow
         .flatMapLatest { newContext ->
             // make sure to always reuse the cache if context
-            // didn't change since last subscription
+            // didn't change since last subscription, which can
+            // happen if subscriber unsubscribes and resubscribes
             if (newContext !== currentContext) {
                 currentContext = newContext
                 pageCollectionJobTracker.clear()
                 storage.clear(emitSnapshot = false)
 
                 preloadAndActivate(
-                    prefetchContext = scope.coroutineContext,
                     key = strategy.initialPage(newContext),
                     pagesSnapshot = emptyMap() // always reload
                 )
@@ -69,24 +68,24 @@ internal class Paginator<Key : Any, PageItem, Context>(
         .onCompletion { stopPageCollections() }
 
     suspend fun preloadAndActivate(
-        prefetchContext: CoroutineContext,
         key: Key
-    ) = preloadAndActivate(prefetchContext, key, storage.getSnapshot())
+    ) = preloadAndActivate(key, storage.getSnapshot())
 
     private suspend fun preloadAndActivate(
-        prefetchContext: CoroutineContext,
         key: Key,
         pagesSnapshot: Map<Key, List<PageItem>>
     ): List<PageItem>? {
         jumpJob?.cancelAndJoin()
 
-        val deferred = scope.async(prefetchContext) {
+        val deferred = scope.async {
             val pageContents = pagesSnapshot[key] ?: onPage(currentContext, key)
                 .firstOrNull()
                 .also {
                     ensureActive()
-                    if (it != null) storage.updatePage(key, it, true)
-                    else storage.removePage(key, true)
+                    if (it != null)
+                        storage.updatePage(key = key, items = it, emitSnapshot = true)
+                    else
+                        storage.removePage(key = key, emitSnapshot = true)
                 }
 
             ensureActive()

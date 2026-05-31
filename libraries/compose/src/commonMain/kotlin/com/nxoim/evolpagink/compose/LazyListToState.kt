@@ -22,7 +22,7 @@ import kotlin.jvm.JvmName
 fun <Key : Any, PageItem> Pageable<Key, PageItem>.toState(
     state: LazyListState,
     coroutineContext: CoroutineContext = Dispatchers.Default,
-    key: (PageItem) -> Any = pageItemKey
+    key: (PageItem) -> Any = ::pageItemKey
 ): PageableComposeState<PageItem> = collectListStateIntoPageable(
     layoutInfo = remember(state) { PageableLazyListLayoutInfo(state) },
     key = key,
@@ -39,7 +39,7 @@ fun <Key : Any, PageItem> Pageable<Key, PageItem>.toState(
 fun <Key : Any, PageItem> Pageable<Key, PageItem>.toState(
     state: LazyGridState,
     coroutineContext: CoroutineContext = Dispatchers.Default,
-    key: (PageItem) -> Any = pageItemKey
+    key: (PageItem) -> Any = ::pageItemKey
 ): PageableComposeState<PageItem> = collectListStateIntoPageable(
     layoutInfo = remember(state) { PageableLazyGridLayoutInfo(state) },
     key = key,
@@ -56,7 +56,7 @@ fun <Key : Any, PageItem> Pageable<Key, PageItem>.toState(
 fun <Key : Any, PageItem> Pageable<Key, PageItem>.toState(
     state: LazyStaggeredGridState,
     coroutineContext: CoroutineContext = Dispatchers.Default,
-    key: (PageItem) -> Any = pageItemKey
+    key: (PageItem) -> Any = ::pageItemKey
 ): PageableComposeState<PageItem> = collectListStateIntoPageable(
     layoutInfo = remember(state) { PageableLazyStaggeredGridLayoutInfo(state) },
     key = key,
@@ -72,7 +72,7 @@ fun <Key : Any, PageItem> Pageable<Key, PageItem>.toState(
     state: LazyListState,
     anchored: Boolean,
     coroutineContext: CoroutineContext = Dispatchers.Default,
-    key: (PageItem) -> Any = pageItemKey
+    key: (PageItem) -> Any = ::pageItemKey
 ): PageableComposeState<PageItem> = collectListStateIntoPageable(
     layoutInfo = remember(state) { PageableLazyListLayoutInfo(state) },
     key = key,
@@ -88,7 +88,7 @@ fun <Key : Any, PageItem> Pageable<Key, PageItem>.toState(
     state: LazyGridState,
     anchored: Boolean,
     coroutineContext: CoroutineContext = Dispatchers.Default,
-    key: (PageItem) -> Any = pageItemKey
+    key: (PageItem) -> Any = ::pageItemKey
 ): PageableComposeState<PageItem> = collectListStateIntoPageable(
     layoutInfo = remember(state) { PageableLazyGridLayoutInfo(state) },
     key = key,
@@ -104,7 +104,7 @@ fun <Key : Any, PageItem> Pageable<Key, PageItem>.toState(
     state: LazyStaggeredGridState,
     anchored: Boolean,
     coroutineContext: CoroutineContext = Dispatchers.Default,
-    key: (PageItem) -> Any = pageItemKey
+    key: (PageItem) -> Any = ::pageItemKey
 ): PageableComposeState<PageItem> = collectListStateIntoPageable(
     layoutInfo = remember(state) { PageableLazyStaggeredGridLayoutInfo(state) },
     key = key,

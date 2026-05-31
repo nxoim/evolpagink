@@ -23,7 +23,7 @@ fun <Key : Any, PageItem> Pageable<Key, PageItem>.toPagerState(
     initialPage: Int = 0,
     @FloatRange(from = -0.5, to = 0.5) initialPageOffsetFraction: Float = 0f,
     coroutineContext: CoroutineContext = EmptyCoroutineContext,
-    key: (PageItem) -> Any = pageItemKey
+    key: (PageItem) -> Any = ::pageItemKey
 ): PageablePagerComposeState<PageItem> {
     val currentItemsState = items.collectAsStateWithLifecycle()
 
@@ -54,7 +54,7 @@ fun <Key : Any, PageItem> Pageable<Key, PageItem>.toPagerState(
     initialPage: Int = 0,
     @FloatRange(from = -0.5, to = 0.5) initialPageOffsetFraction: Float = 0f,
     coroutineContext: CoroutineContext = EmptyCoroutineContext,
-    key: (PageItem) -> Any = pageItemKey
+    key: (PageItem) -> Any = ::pageItemKey
 ): PageablePagerComposeState<PageItem> {
     val currentItemsState = items.collectAsStateWithLifecycle()
 
