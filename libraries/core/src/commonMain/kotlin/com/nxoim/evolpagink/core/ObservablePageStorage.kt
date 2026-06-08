@@ -1,5 +1,6 @@
 package com.nxoim.evolpagink.core
 
+import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.sync.Mutex
@@ -9,7 +10,10 @@ internal class ObservablePageStorage<Key : Any, PageItem>(
     private val storage: PageStorage<Key, PageItem>,
 ) {
     private val mutex = Mutex()
-    private val _pageSnapshots = MutableSharedFlow<Map<Key, List<PageItem>>>(replay = 1)
+    private val _pageSnapshots = MutableSharedFlow<Map<Key, List<PageItem>>>(
+        extraBufferCapacity = 1,
+        onBufferOverflow = BufferOverflow.DROP_OLDEST
+    )
     val pageSnapshots = _pageSnapshots.asSharedFlow()
 
     suspend fun getSnapshot() = mutex.withLock { storage.all }
@@ -34,6 +38,6 @@ internal class ObservablePageStorage<Key : Any, PageItem>(
     }
 
     private suspend fun emitSnapshot() {
-        _pageSnapshots.emit(storage.all)
+        _pageSnapshots.tryEmit(storage.all)
     }
 }
