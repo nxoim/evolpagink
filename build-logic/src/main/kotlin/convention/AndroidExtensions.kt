@@ -44,7 +44,7 @@ fun ApplicationExtension.setupComposeAndroidApp(
     }
 }
 
-fun Project.setupMicrobenchmark(
+fun Project.setupAndroidMacrobenchmark(
     namespace: String = "com.nxoim.evolpagink.${project.name}"
 ) {
     extensions.findByType(LibraryExtension::class.java)?.apply {

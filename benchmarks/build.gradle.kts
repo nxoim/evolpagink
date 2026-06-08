@@ -1,10 +1,10 @@
-import convention.setupMicrobenchmark
+import convention.setupAndroidMacrobenchmark
 
 plugins {
     alias(libs.plugins.android.libraryLegacy)
 }
 
-setupMicrobenchmark()
+setupAndroidMacrobenchmark()
 
 dependencies {
     androidTestImplementation(projects.libraries.core)

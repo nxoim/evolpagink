@@ -4,7 +4,7 @@ rootProject.name = "evolpagink"
 
 include(":sample:shared")
 include(":sample:android")
-include(":microbenchmark")
+include(":benchmarks")
 include(":libraries:core")
 include(":libraries:compose")
 enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
@@ -17,6 +17,9 @@ pluginManagement {
         maven("https://maven.pkg.jetbrains.space/public/p/compose/dev")
         maven("https://maven.pkg.jetbrains.space/kotlin/p/wasm/experimental")
     }
+}
+plugins {
+    id("org.gradle.toolchains.foojay-resolver-convention") version "1.0.0"
 }
 
 dependencyResolutionManagement {
