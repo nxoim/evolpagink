@@ -9,8 +9,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ExplicitGroupsComposable
 import androidx.compose.runtime.remember
 import com.nxoim.evolpagink.core.Pageable
-import kotlinx.coroutines.Dispatchers
 import kotlin.coroutines.CoroutineContext
+import kotlin.coroutines.EmptyCoroutineContext
 import kotlin.jvm.JvmName
 
 /**
@@ -21,7 +21,7 @@ import kotlin.jvm.JvmName
 @JvmName("toStateList")
 fun <Key : Any, PageItem> Pageable<Key, PageItem>.toState(
     state: LazyListState,
-    coroutineContext: CoroutineContext = Dispatchers.Default,
+    coroutineContext: CoroutineContext = EmptyCoroutineContext,
     key: (PageItem) -> Any = ::pageItemKey
 ): PageableComposeState<PageItem> = collectListStateIntoPageable(
     layoutInfo = remember(state) { PageableLazyListLayoutInfo(state) },
@@ -38,7 +38,7 @@ fun <Key : Any, PageItem> Pageable<Key, PageItem>.toState(
 @JvmName("toStateGrid")
 fun <Key : Any, PageItem> Pageable<Key, PageItem>.toState(
     state: LazyGridState,
-    coroutineContext: CoroutineContext = Dispatchers.Default,
+    coroutineContext: CoroutineContext = EmptyCoroutineContext,
     key: (PageItem) -> Any = ::pageItemKey
 ): PageableComposeState<PageItem> = collectListStateIntoPageable(
     layoutInfo = remember(state) { PageableLazyGridLayoutInfo(state) },
@@ -55,7 +55,7 @@ fun <Key : Any, PageItem> Pageable<Key, PageItem>.toState(
 @JvmName("toStateStaggeredGrid")
 fun <Key : Any, PageItem> Pageable<Key, PageItem>.toState(
     state: LazyStaggeredGridState,
-    coroutineContext: CoroutineContext = Dispatchers.Default,
+    coroutineContext: CoroutineContext = EmptyCoroutineContext,
     key: (PageItem) -> Any = ::pageItemKey
 ): PageableComposeState<PageItem> = collectListStateIntoPageable(
     layoutInfo = remember(state) { PageableLazyStaggeredGridLayoutInfo(state) },
