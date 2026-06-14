@@ -39,34 +39,3 @@ fun <Key : Any, PageItem> Pageable<Key, PageItem>.toPagerState(
         anchored = false
     )
 }
-
-/**
- * Binds a [Pageable] to a Compose Pager (e.g., [HorizontalPager] or [VerticalPager]).
- *
- * Each item in the pageable becomes a single pager page. Fetches are triggered as pages become visible.
- */
-@OptIn(ExperimentalCoroutinesApi::class, InternalPageableApi::class)
-@Composable
-@JvmName("toPagerStateVisibleDeprecated")
-@Deprecated(anchoredParamDeprecationNote, replaceWith = ReplaceWith("toPagerState(state, key)"))
-fun <Key : Any, PageItem> Pageable<Key, PageItem>.toPagerState(
-    anchored: Boolean,
-    initialPage: Int = 0,
-    @FloatRange(from = -0.5, to = 0.5) initialPageOffsetFraction: Float = 0f,
-    coroutineContext: CoroutineContext = EmptyCoroutineContext,
-    key: (PageItem) -> Any = ::pageItemKey
-): PageablePagerComposeState<PageItem> {
-    val currentItemsState = items.collectAsStateWithLifecycle()
-
-    return collectPagerStateIntoPageable(
-        state = rememberPagerState(
-            initialPage,
-            initialPageOffsetFraction,
-            pageCount = { currentItemsState.value.size }
-        ),
-        currentItemsState = currentItemsState,
-        key = key,
-        coroutineContext = coroutineContext,
-        anchored = anchored
-    )
-}
