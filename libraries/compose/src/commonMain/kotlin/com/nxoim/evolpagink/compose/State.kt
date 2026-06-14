@@ -1,14 +1,27 @@
+@file:OptIn(InternalPageableApi::class)
+
 package com.nxoim.evolpagink.compose
 
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.runtime.State
+import com.nxoim.evolpagink.core.InternalPageableApi
+import com.nxoim.evolpagink.core.Pageable
 import kotlin.jvm.JvmInline
 
+/**
+ * Compose representation of [Pageable].
+ */
 class PageableComposeState<T> internal constructor(
     val items: State<List<T>>,
     keyer: PageItemKeyProvider<T>
 ) : PageItemKeyProvider<T> by keyer
 
+/**
+ * Compose representation of [Pageable] specific to standard pager UI components.
+ *
+ * @see HorizontalPager
+ * @see VerticalPager
+ */
 class PageablePagerComposeState<T> internal constructor(
     val items: State<List<T>>,
     val key: (index: Int) -> Any,
@@ -17,6 +30,7 @@ class PageablePagerComposeState<T> internal constructor(
 
 // exists to centralize compose list key management
 // between paging and displaying lists
+@InternalPageableApi
 sealed interface PageItemKeyProvider<T> {
     fun key(item: T): Any
     fun key(index: Int, item: T): Any

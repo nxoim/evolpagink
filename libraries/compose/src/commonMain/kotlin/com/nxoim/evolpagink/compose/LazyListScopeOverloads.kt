@@ -17,12 +17,15 @@ import androidx.compose.foundation.lazy.staggeredgrid.items
 import androidx.compose.foundation.lazy.staggeredgrid.itemsIndexed
 import androidx.compose.runtime.Composable
 
+/**
+ * @see androidx.compose.foundation.lazy.items
+ */
 inline fun <T> LazyStaggeredGridScope.items(
     state: PageableComposeState<T>,
     crossinline contentType: (T) -> Any? = { null },
     noinline span: ((T) -> StaggeredGridItemSpan)? = null,
     crossinline itemContent: @Composable LazyStaggeredGridItemScope.(T) -> Unit
-) = items<T>(
+) = items(
     items = state.items.value,
     key = state::key,
     span = span,
@@ -30,12 +33,15 @@ inline fun <T> LazyStaggeredGridScope.items(
     itemContent = itemContent
 )
 
+/**
+ * @see androidx.compose.foundation.lazy.itemsIndexed
+ */
 inline fun <T> LazyStaggeredGridScope.itemsIndexed(
     state: PageableComposeState<T>,
     crossinline contentType: (index: Int, item: T) -> Any? = { _, _ -> null },
     noinline span: ((index: Int, item: T) -> StaggeredGridItemSpan)? = null,
     crossinline itemContent: @Composable LazyStaggeredGridItemScope.(index: Int, item: T) -> Unit
-) = itemsIndexed<T>(
+) = itemsIndexed(
     items = state.items.value,
     key = state::key,
     span = span,
@@ -43,44 +49,56 @@ inline fun <T> LazyStaggeredGridScope.itemsIndexed(
     itemContent = itemContent
 )
 
+/**
+ * @see androidx.compose.foundation.lazy.items
+ */
 inline fun <T> LazyGridScope.items(
     state: PageableComposeState<T>,
     noinline contentType: (T) -> Any? = { null },
     crossinline itemContent: @Composable LazyGridItemScope.(T) -> Unit
-) = items<T>(
+) = items(
     items = state.items.value,
     key = state::key,
     contentType = contentType,
     itemContent = itemContent
 )
 
+/**
+ * @see androidx.compose.foundation.lazy.itemsIndexed
+ */
 inline fun <T> LazyGridScope.itemsIndexed(
     state: PageableComposeState<T>,
     crossinline contentType: (index: Int, item: T) -> Any? = { _, _ -> null },
     crossinline itemContent: @Composable LazyGridItemScope.(index: Int, item: T) -> Unit
-) = itemsIndexed<T>(
+) = itemsIndexed(
     items = state.items.value,
     key = state::key,
     contentType = contentType,
     itemContent = itemContent
 )
 
+/**
+ * @see androidx.compose.foundation.lazy.items
+ */
 inline fun <T> LazyListScope.items(
     state: PageableComposeState<T>,
     noinline contentType: (T) -> Any? = { null },
     crossinline itemContent: @Composable LazyItemScope.(T) -> Unit
-) = items<T>(
+) = items(
     items = state.items.value,
     key = state::key,
     contentType = contentType,
     itemContent = itemContent
 )
 
+/**
+ * @see androidx.compose.foundation.lazy.itemsIndexed
+ */
 inline fun <T> LazyListScope.itemsIndexed(
     state: PageableComposeState<T>,
     crossinline contentType: (Int, T) -> Any? = { _, _ -> null },
     crossinline itemContent: @Composable LazyItemScope.(index: Int, item: T) -> Unit
-) = itemsIndexed<T>(
+) = itemsIndexed(
     items = state.items.value,
     key = state::key,
     contentType = contentType,
