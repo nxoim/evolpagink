@@ -47,7 +47,7 @@ internal value class PageableLazyListLayoutInfo(
 internal value class PageableLazyGridLayoutInfo(private val state: LazyGridState) :
     PageableLayoutInfo {
     override val visibleItemsInfo: List<PageableItemLayoutInfo>
-        // Grids can have out of order visible com.nxoim.TODORENAMElibrary.items
+        // Grids can have out of order visible items
         get() = state.layoutInfo.visibleItemsInfo.sortedBy { it.index }
             .map(::PageableLazyGridItemInfo)
 

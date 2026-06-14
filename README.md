@@ -24,10 +24,11 @@ val pageable = pageable(
         yourSource.getPage(index)
         // getPage is Flow<List<YourItem>>
     },
+    pageItemKey = { item -> item.id },
     strategy = prefetchPageAmount(
         // this strategy will use your ui to fetch
         // items to fill the viewport + prefetch
-        // specified amount beyond viewport
+        // specified minimumPageAmount beyond viewport
         initialPage = 0,
         minimumPageAmount = 2
     )
@@ -37,14 +38,13 @@ val pageable = pageable(
 Aaaaaand then you use it. For example in compose it looks like:
 ```kotlin
 val lazyListState = rememberLazyListState()
-val pageableState = yourModel.pageable.toState(
-    lazyListState,
-    key = { item -> item.maybeSomeId }
-)
-
+val pageableState = yourModel.pageable.toState(lazyListState)
+    
+// don't forget to bind the list state
 LazyColumn(lazyListState) {
-    // this is an overload that automatically
-    // uses the key lambda from above
+    // this is an overload that, by default,
+    // sets the keys using uses the item id lambda
+    // from pageable declaration in the model
     items(pageableState) { item ->
         YourItem(item)
     }
