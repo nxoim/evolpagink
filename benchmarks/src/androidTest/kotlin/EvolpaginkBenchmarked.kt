@@ -76,7 +76,7 @@ class EvolpaginkBenchmarked(
 
                     // tell pageable which pages are visible so it can re-evaluate (forces reload semantics)
                     pageable.getPageKeyForItem(items.last())?.let { visibleKey ->
-                        pageable._onEvent(PageDisplayingEvent.VisibleItemsUpdated(listOf(visibleKey)))
+                        pageable.onVisibilityEvent(PageDisplayingEvent.VisibleItemsUpdated(listOf(visibleKey)))
                     }
 
                     delay(ITEM_LOAD_DELAY_MS) // preserve rebuild cost parity with Paging3

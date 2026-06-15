@@ -77,8 +77,7 @@ fun <Key : Any, PageItem : Any, Context> pageable(
             page: Key
         ): List<PageItem>? = paginator.preloadAndActivate(page)
 
-        @InternalPageableApi
-        override suspend fun _onEvent(event: PageDisplayingEvent<Key>) {
+        override suspend fun onVisibilityEvent(event: PageDisplayingEvent<Key>) {
             paginator.updatePagesToCache(event)
         }
 
@@ -106,9 +105,12 @@ interface Pageable<Key : Any, PageItem> {
      */
     suspend fun jumpTo(page: Key): List<PageItem>?
 
-    @InternalPageableApi
-    @Suppress("functionName")
-    suspend fun _onEvent(event: PageDisplayingEvent<Key>)
+    /**
+     * Reports visible pages to the paginator, triggers the declared
+     * [PageFetchStrategy] to calculate a list of pages that are
+     * expected to be loaded by the paginator.
+     */
+    suspend fun onVisibilityEvent(event: PageDisplayingEvent<Key>)
 
     /**
      * Provides key for an item from any loaded page. See [pageable].

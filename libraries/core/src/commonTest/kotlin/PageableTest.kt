@@ -108,7 +108,7 @@ class PageableTest {
         pageable.items.test {
             awaitNonEmpty()
 
-            pageable._onEvent(PageDisplayingEvent.VisibleItemsUpdated(listOf(0)))
+            pageable.onVisibilityEvent(PageDisplayingEvent.VisibleItemsUpdated(listOf(0)))
 
             val withPrefetchedPage = awaitNonEmpty()
             assertTrue(
@@ -131,10 +131,10 @@ class PageableTest {
         pageable.items.test {
             awaitNonEmpty()
 
-            pageable._onEvent(PageDisplayingEvent.PageAnchorChanged(2))
+            pageable.onVisibilityEvent(PageDisplayingEvent.PageAnchorChanged(2))
             advanceUntilIdle()
 
-            pageable._onEvent(PageDisplayingEvent.VisibleItemsUpdated(listOf(2)))
+            pageable.onVisibilityEvent(PageDisplayingEvent.VisibleItemsUpdated(listOf(2)))
 
             val withBackPrefetchedPage = awaitNonEmpty()
             assertTrue(
@@ -169,7 +169,7 @@ class PageableTest {
                 "Page 1 should not appear before strategy requests it",
             )
 
-            pageable._onEvent(PageDisplayingEvent.VisibleItemsUpdated(listOf(0)))
+            pageable.onVisibilityEvent(PageDisplayingEvent.VisibleItemsUpdated(listOf(0)))
 
             val withPage1Loaded = awaitItemUntil { it.containsAll(pageItems(1)) }
             assertTrue(
@@ -244,7 +244,7 @@ class PageableTest {
         pageable.items.test {
             awaitNonEmpty()
 
-            pageable._onEvent(PageDisplayingEvent.PageAnchorChanged(0))
+            pageable.onVisibilityEvent(PageDisplayingEvent.PageAnchorChanged(0))
 
             val withBothPagesLoaded = awaitItemUntil { items ->
                 items.containsAll(listOf("p1_1", "p1_2", "p1_3", "p1_4"))
@@ -268,7 +268,7 @@ class PageableTest {
         pageable.items.test {
             awaitNonEmpty()
 
-            pageable._onEvent(PageDisplayingEvent.VisibleItemsUpdated(listOf(0)))
+            pageable.onVisibilityEvent(PageDisplayingEvent.VisibleItemsUpdated(listOf(0)))
 
             awaitItemUntil { it.containsAll(pageItems(1)) }
 
@@ -346,7 +346,7 @@ class PageableTest {
 
         pageable.items.test {
             awaitNonEmpty()
-            pageable._onEvent(PageDisplayingEvent.VisibleItemsUpdated(listOf(0)))
+            pageable.onVisibilityEvent(PageDisplayingEvent.VisibleItemsUpdated(listOf(0)))
             awaitNonEmpty()
 
             val updatedPage0 = (0 until pageSize).map { "upd_$it" }
@@ -386,7 +386,7 @@ class PageableTest {
         pageable.items.test {
             awaitItem()
 
-            pageable._onEvent(PageDisplayingEvent.VisibleItemsUpdated(listOf(0)))
+            pageable.onVisibilityEvent(PageDisplayingEvent.VisibleItemsUpdated(listOf(0)))
             advanceUntilIdle()
 
             cancelAndIgnoreRemainingEvents()
@@ -423,7 +423,7 @@ class PageableTest {
 
         val pageable = backgroundScope.makePageable(source)
 
-        pageable._onEvent(PageDisplayingEvent.PageAnchorChanged(2))
+        pageable.onVisibilityEvent(PageDisplayingEvent.PageAnchorChanged(2))
         advanceUntilIdle()
 
         val items = pageable.items.value

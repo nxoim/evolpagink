@@ -48,7 +48,7 @@ internal fun <Key : Any, PageItem> Pageable<Key, PageItem>.collectPagerStateInto
                         }
                     }
                     .distinctUntilChanged()
-                    .collect { pageable._onEvent(PageDisplayingEvent.PageAnchorChanged(it)) }
+                    .collect { pageable.onVisibilityEvent(PageDisplayingEvent.PageAnchorChanged(it)) }
             } else {
                 snapshotFlow { state.layoutInfo }
                     .map { layoutInfo ->
@@ -73,7 +73,7 @@ internal fun <Key : Any, PageItem> Pageable<Key, PageItem>.collectPagerStateInto
                         visiblePageKeys
                     }
                     .distinctUntilChanged()
-                    .collect { pageable._onEvent(PageDisplayingEvent.VisibleItemsUpdated(it)) }
+                    .collect { pageable.onVisibilityEvent(PageDisplayingEvent.VisibleItemsUpdated(it)) }
             }
         }
     }
