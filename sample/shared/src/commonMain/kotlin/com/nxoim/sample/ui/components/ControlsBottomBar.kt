@@ -47,13 +47,19 @@ fun ControlsBottomBar(
                 ProvideSharedTransitionContext {
                     when (current) {
                         Selected.Filters -> FilterPanel(
-                            sharedElementKey = "filter_panel",
+                            modifier = Modifier.sharedBounds(
+                                rememberSharedContentState("filter_panel"),
+                                this
+                            ),
                             controller = filterController,
                             onClose = { selected = null }
                         )
 
                         Selected.Sorting -> SortingPanel(
-                            sharedElementKey = "sorting_panel",
+                            modifier = Modifier.sharedBounds(
+                                rememberSharedContentState("sorting_panel"),
+                                this
+                            ),
                             controller = sortingController,
                             onClose = { selected = null }
                         )

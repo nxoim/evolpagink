@@ -100,43 +100,19 @@ inline fun ProvideSharedTransitionContext(
 
 @Composable
 fun PanelContainer(
-    sharedElementKey: Any? = null,
+    modifier: Modifier = Modifier,
     content: @Composable ColumnScope.() -> Unit
 ) {
-    val context = LocalSharedTransitionContext.current
-    if (context != null) {
-        with(context.sharedScope) {
-            Surface(
-                Modifier
-                    .withLocalTransitionContext(sharedElementKey) {
-                        Modifier.sharedBounds(
-                            rememberSharedContentState(it),
-                            context.animatedScope
-                        )
-                    }
-                    .widthIn(max = 520.dp),
-                shape = RoundedCornerShape(28.dp),
-                shadowElevation = 8.dp
-            ) {
-                Column(
-                    Modifier.padding(12.dp).fillMaxWidth(),
-                    verticalArrangement = Arrangement.spacedBy(4.dp),
-                    content = content
-                )
-            }
-        }
-    } else {
-        Surface(
-            Modifier.widthIn(max = 520.dp),
-            shape = RoundedCornerShape(28.dp),
-            shadowElevation = 8.dp
-        ) {
-            Column(
-                Modifier.padding(12.dp).fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(4.dp),
-                content = content
-            )
-        }
+    Surface(
+        modifier.widthIn(max = 520.dp),
+        shape = RoundedCornerShape(28.dp),
+        shadowElevation = 8.dp
+    ) {
+        Column(
+            Modifier.padding(12.dp).fillMaxWidth(),
+            verticalArrangement = Arrangement.spacedBy(4.dp),
+            content = content
+        )
     }
 }
 

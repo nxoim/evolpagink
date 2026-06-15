@@ -35,12 +35,12 @@ import kotlinx.coroutines.flow.StateFlow
 fun FilterPanel(
     controller: FilterController,
     onClose: () -> Unit,
-    sharedElementKey: Any? = null
+    modifier: Modifier = Modifier
 ) {
     val filters by controller.filters.collectAsState()
     val defaultFilters = SongRetrievalContext.Default.filters
 
-    PanelContainer(sharedElementKey) {
+    PanelContainer(modifier) {
         PanelHeader(title = "Filtering", onClose = onClose, Modifier.padding(bottom = 8.dp)) {
             FilledTonalButton(
                 onClick = { controller.resetFilters() },

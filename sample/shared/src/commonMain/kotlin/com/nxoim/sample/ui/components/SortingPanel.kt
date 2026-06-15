@@ -32,12 +32,12 @@ import kotlinx.coroutines.flow.StateFlow
 fun SortingPanel(
     controller: SortingController,
     onClose: () -> Unit,
-    sharedElementKey: Any? = null
+    modifier: Modifier = Modifier,
 ) {
     val sorting by controller.sorting.collectAsState()
     val defaultSorting = SongRetrievalContext.Default.sorting
 
-    PanelContainer(sharedElementKey) {
+    PanelContainer(modifier) {
         PanelHeader(title = "Sorting", onClose = onClose, Modifier.padding(bottom = 8.dp)) {
             FilledTonalButton(
                 onClick = { controller.resetSorting() },
