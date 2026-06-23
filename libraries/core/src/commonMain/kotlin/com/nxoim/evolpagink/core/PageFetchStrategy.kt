@@ -7,7 +7,7 @@ import kotlin.jvm.JvmInline
  * are available around visible items in both directions.
  */
 fun <PageItem, Context> prefetchMinimumItemAmount(
-    initialPage: Int = 0,
+    initialPage: Context.() -> Int = { 0 },
     minimumItemAmount: Int = 20
 ): PageFetchStrategy<Int, PageItem, Context> = prefetchMinimumItemAmount(
     initialPage = initialPage,
@@ -21,7 +21,7 @@ fun <PageItem, Context> prefetchMinimumItemAmount(
  * are available around visible items in both directions.
  */
 fun <Key : Any, PageItem, Context> prefetchMinimumItemAmount(
-    initialPage: Key,
+    initialPage: Context.() -> Key,
     onNextPage: Context.(key: Key) -> Key?,
     onPreviousPage: Context.(key: Key) -> Key?,
     minimumItemAmount: Int = 20
@@ -45,7 +45,7 @@ fun <Key : Any, PageItem, Context> prefetchMinimumItemAmount(
  * Strategy that prefetches a fixed number of pages around visible items in both directions.
  */
 fun <PageItem, Context> prefetchPageAmount(
-    initialPage: Int = 0,
+    initialPage: Context.() -> Int = { 0 },
     minimumPageAmount: Int = 2
 ): PageFetchStrategy<Int, PageItem, Context> = prefetchPageAmount(
     initialPage = initialPage,
@@ -58,12 +58,11 @@ fun <PageItem, Context> prefetchPageAmount(
  * Strategy that prefetches a fixed number of pages around visible items in both directions.
  */
 fun <Key : Any, PageItem, Context> prefetchPageAmount(
-    initialPage: Key,
+    initialPage: Context.() -> Key,
     onNextPage: Context.(key: Key) -> Key?,
     onPreviousPage: Context.(key: Key) -> Key?,
     minimumPageAmount: Int = 2
 ): PageFetchStrategy<Key, PageItem, Context> = PageFetchStrategy(
-
     initialPage = initialPage,
     onNextPage = onNextPage,
     onPreviousPage = onPreviousPage,
@@ -95,7 +94,6 @@ class PageFetchStrategy<Key : Any, PageItem, Context>(
         context: PageFetchContext<Key, PageItem, Context>
     ) -> List<Key>
 ) {
-
     constructor(
         initialPage:  Key,
         onNextPage: Context.(key: Key) -> Key?,
