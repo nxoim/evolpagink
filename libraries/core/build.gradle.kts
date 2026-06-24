@@ -10,7 +10,7 @@ plugins {
     id("com.nxoim.gradle.kotlin-multiplatform-plugins")
 }
 
-setupPublishing(artifactId = "evolpagink-core")
+setupPublishing(artifactId = "core")
 
 kotlin {
     setupJvmTarget()

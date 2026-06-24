@@ -8,7 +8,7 @@ plugins {
     id("com.nxoim.gradle.compose-multiplatform-plugins")
 }
 
-setupPublishing(artifactId = "evolpagink-compose")
+setupPublishing(artifactId = "compose")
 
 kotlin {
     setupJvmTarget()
