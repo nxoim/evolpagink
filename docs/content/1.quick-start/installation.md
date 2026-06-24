@@ -14,7 +14,7 @@ seo:
 
 ```toml [libs.versions.toml]
 [versions]
-evolpagink = "0.6.1"
+evolpagink = "0.13.0"
 
 [libraries]
 evolpaginkCompose = { module = "com.nxoim.evolpagink:compose", version.ref = "evolpagink" }

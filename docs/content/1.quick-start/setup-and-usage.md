@@ -45,9 +45,9 @@ class SongListModel(source: SongSource, coroutineScope: CoroutineScope) {
     val songPageable = pageable(
         coroutineScope,
         onPage = { index -> source.getPage(index) },
-        pageItemKey = { it.id },
+        pageItemKey = { it.id }, // key per each item in a page
         strategy = prefetchPageAmount( // one of the default strategies
-            initialPage = 0, 
+            initialPage = { 0 }, 
             minimumPageAmount = 2
         )
     )
@@ -61,9 +61,7 @@ class SongListModel(source: SongSource, coroutineScope: CoroutineScope) {
 ::collapsible
 ```kotlin
 val lazyListState = rememberLazyListState()
-val pageableState = songListModel.songPageable.toState(
-    lazyListState
-)
+val pageableState = songListModel.songPageable.toState(lazyListState)
 ```
 ::
 
@@ -74,10 +72,27 @@ val pageableState = songListModel.songPageable.toState(
 </steps>
 
 
-## Example Structure
+## Full Example Structure
 
 
 ::code-tree{default-value="songs/SongListModel.kt"}
+
+```kotlin [songs/SongListScreen.kt]
+@Composable
+fun SongListScreen(model: SongListModel) {
+    val lazyListState = rememberLazyListState()
+    val pageableState = model.songPageable.toState(lazyListState)
+
+    LazyColumn(lazyListState) { // dont forget to use the state
+        // this is an overload that automatically 
+        // uses the key lambda specified in model's pageable
+        // declaration, in pageItemKey
+        items(pageableState) { song ->
+            SongItem(song)
+        }
+    }
+}
+```
 
 
 ```kotlin [songs/SongData.kt]
@@ -110,28 +125,10 @@ class SongListModel(
         onPage = { index -> source.getPage(index) },
         pageItemKey = { it.id },
         strategy = prefetchPageAmount( // one of the default strategies
-            initialPage = 0, 
+            initialPage = { 0 }, 
             minimumPageAmount = 2
         )
     )
-}
-```
-
-
-```kotlin [songs/SongListScreen.kt]
-@Composable
-fun SongListScreen(model: SongListModel) {
-    val lazyListState = rememberLazyListState()
-    val pageableState = model.songPageable.toState(lazyListState)
-
-    LazyColumn(lazyListState) { // dont forget to use the state
-        // this is an overload that automatically 
-        // uses the key lambda specified in model's pageable
-        // declaration, in pageItemKey
-        items(pageableState) { song ->
-            SongItem(song)
-        }
-    }
 }
 ```
 ::

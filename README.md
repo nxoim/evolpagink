@@ -29,7 +29,7 @@ val pageable = pageable(
         // this strategy will use your ui to fetch
         // items to fill the viewport + prefetch
         // specified minimumPageAmount beyond viewport
-        initialPage = 0,
+        initialPage = { 0 },
         minimumPageAmount = 2
     )
 )
@@ -55,14 +55,14 @@ LazyColumn(lazyListState) {
 ```
 
 ## fast?
-Theres a microbenchmark in the repository. Clone the repo and run it. If you find the benchmark unsatisfactory - i'd very much appreciate a discussion in an open issue!
+In early testing the performance of evolpagink in similar tasks is roughly 2x faster than Paging3 on emulated android. To run the benchmark just clone the repo and see the `benchmarks` module.  If you find the benchmarks unsatisfactory - a new discussion opened in the issues section would be much appreciated!
 
 ## customizable?
 Yes. If you are unsatisfied with any of the strategies for fetching and prefetching items - you can easily create your own by implementing `PageFetchStrategy`. You can tailor the behavior precisely.
 
 ## what else?
-- evolpagink is Compose Multiplatform first, but the **core** logic being **platform agnostic** leaves room for compatibility with other UI frameworks.
-- If the library becomes unmaintained - forking and maintaining it yourself should be easy due to the small size and code being mostly self documenting.
+- evolpagink is Compose Multiplatform first, but the **core** logic being **platform agnostic** leaves room for compatibility with other UI frameworks
+- If the library becomes unmaintained - forking and maintaining it yourself should be easy due to the small size and code being mostly self documenting
 
 ## Contributions
 To contribute:

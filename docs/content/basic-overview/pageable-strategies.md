@@ -10,7 +10,7 @@ seo:
 The variant based on minimum item amount will try to load as many pages needed to reach the minimum specified amount of items.
 ```kotlin
 prefetchMinimumItemAmount( // the default overload for indexed pages
-    initialPage = 0, // the first page key to use when loading starts
+    initialPage = { 0 }, // the first page key to use when loading starts
     minimumItemAmount = 20
 )
 ```
@@ -18,7 +18,7 @@ prefetchMinimumItemAmount( // the default overload for indexed pages
 The variant based on page amount will try to load the minimum specified amount of pages.
 ```kotlin
 prefetchPageAmount(
-    initialPage = 0,
+    initialPage = { 0 },
     minimumPageAmount = 2
 )   
 ```
@@ -31,16 +31,16 @@ Visit the sample linked below and play with the UI scale to see how items are lo
 
 ::card
 ---
-title: Sample
-icon: i-lucide-eye
+title: Sample App
+icon: i-lucide-layout-grid
 to: ../other/sample/index.html
 target: _blank
 ---
-Compose WasmJS evolpagink sample
+Sample App in Compose Web (WasmJS)
 ::
 
 ## How UI interacts with pagination
-`Pageable` exposes a method, `_onEvent`, that allows the UI to tell it what is visible. `Pageable` will then refer to the provided strategy to compose the new intended visible list of pages.
+`Pageable` exposes a method, `onVisibilityEvent`, that allows the UI to tell the engine what is visible at the moment. The engine will then refer to the specified strategy to compose the new intended visible list of pages.
 
 The UI can report visible items to `Pageable` in 2 ways:
 - By reporting visible items. Fully dynamic, adaptive to viewport size. Recommended
