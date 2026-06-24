@@ -20,7 +20,9 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.update
+import kotlin.concurrent.atomics.AtomicReference
 import kotlin.concurrent.atomics.ExperimentalAtomicApi
+import kotlin.concurrent.atomics.updateAndFetch
 import kotlin.coroutines.cancellation.CancellationException
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -35,7 +37,7 @@ internal class Paginator<Key : Any, PageItem, Context>(
         ScatterMapPageStorage(pageItemKey)
     )
     private val pageCollectionJobTracker = PageJobTracker<Key>()
-    private var jumpJob: Job? = null
+    private val relevantJumpJob = AtomicReference<Job?>(null)
     private val _activePageKeys = MutableStateFlow(listOf(strategy.initialPage(contextFlow.value)))
     val activePageKeys = _activePageKeys.asStateFlow()
 
@@ -75,9 +77,7 @@ internal class Paginator<Key : Any, PageItem, Context>(
         key: Key,
         pagesSnapshot: Map<Key, List<PageItem>>
     ): List<PageItem>? {
-        jumpJob?.cancelAndJoin()
-
-        val deferred = scope.async {
+        val thisJob = scope.async {
             val pageContents = pagesSnapshot[key] ?: onPage(currentContext, key)
                 .firstOrNull()
                 .also {
@@ -95,10 +95,17 @@ internal class Paginator<Key : Any, PageItem, Context>(
             pageContents
         }
 
-        jumpJob = deferred
+        relevantJumpJob.updateAndFetch {
+            it?.cancelAndJoin()
+
+           thisJob
+        }
 
         return try {
-            deferred.await()
+            val items = thisJob.await()
+
+            // success if job is still relevant
+            if (thisJob === relevantJumpJob.load()) items else null
         } catch (e: CancellationException) {
             null // superseded by a newer jump
         }
