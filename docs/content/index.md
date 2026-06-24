@@ -1,7 +1,7 @@
 ---
 seo:
   title: evolpagink
-  description: Kotlin Multiplatform pagination library
+  description: evolpagink is a multiplatform UI item pagination library. Get started wil evolpagink and explore the web sample app
 ---
 
 ::home-hero
