@@ -7,6 +7,9 @@ import org.gradle.api.publish.maven.MavenPublication
 import org.gradle.kotlin.dsl.configure
 import org.gradle.kotlin.dsl.withType
 
+internal fun publicationArtifactId(baseArtifactId: String, publicationName: String): String =
+    if (publicationName == "android") "$baseArtifactId-android" else baseArtifactId
+
 fun Project.setupPublishing(
     artifactId: String = this.name,
     description: String = "Multiplatform pagination library",
@@ -30,7 +33,10 @@ fun Project.setupPublishing(
     pluginManager.withPlugin("org.gradle.maven-publish") {
         extensions.configure<PublishingExtension> {
             publications.withType<MavenPublication>().configureEach {
-                this.artifactId = artifactId
+                this.artifactId = publicationArtifactId(
+                    baseArtifactId = artifactId,
+                    publicationName = name
+                )
 
                 pom {
                     this.description.set(description)
