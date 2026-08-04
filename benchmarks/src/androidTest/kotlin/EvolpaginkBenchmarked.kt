@@ -31,7 +31,7 @@ class EvolpaginkBenchmarked(
                 }
             },
             strategy = prefetchMinimumItemAmount(
-                initialPage = 0,
+                initialPage = { 0 },
                 minimumItemAmount = ITEMS_PER_PAGE * 2
             )
         )

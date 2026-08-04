@@ -16,19 +16,19 @@ internal class ObservablePageStorage<Key : Any, PageItem>(
     )
     val pageSnapshots = _pageSnapshots.asSharedFlow()
 
-    suspend fun getSnapshot() = mutex.withLock { storage.all }
+    suspend fun getSnapshot() = mutex.withLock { storage.snapshot }
 
     suspend fun getPageKeyForItem(item: PageItem): Key? =
         mutex.withLock { storage.getPageKeyForItem(item) }
 
     suspend fun updatePage(key: Key, items: List<PageItem>, emitSnapshot: Boolean) =
         mutex.withLock {
-            storage[key] = items
+            storage.replacePage(key, items)
             if (emitSnapshot) emitSnapshot()
         }
 
     suspend fun removePage(key: Key, emitSnapshot: Boolean) = mutex.withLock {
-        storage.remove(key)
+        storage.removePage(key)
         if (emitSnapshot) emitSnapshot()
     }
 
@@ -38,6 +38,6 @@ internal class ObservablePageStorage<Key : Any, PageItem>(
     }
 
     private suspend fun emitSnapshot() {
-        _pageSnapshots.tryEmit(storage.all)
+        _pageSnapshots.tryEmit(storage.snapshot)
     }
 }

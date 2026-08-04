@@ -2,6 +2,7 @@ import convention.setupAndroidMacrobenchmark
 
 plugins {
     alias(libs.plugins.android.libraryLegacy)
+    alias(libs.plugins.androidx.benchmark)
 }
 
 setupAndroidMacrobenchmark()

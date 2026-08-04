@@ -5,81 +5,94 @@ import androidx.collection.MutableScatterSet
 
 
 internal interface PageStorage<Key : Any, PageItem> {
-    operator fun set(key: Key, page: List<PageItem>)
+    fun replacePage(key: Key, items: List<PageItem>)
+    fun removePage(key: Key)
 
-    val all: Map<Key, List<PageItem>>
-    fun remove(key: Key)
-
+    val snapshot: Map<Key, List<PageItem>>
     fun getPageKeyForItem(item: PageItem): Key?
 
-    fun clear() { all.keys.forEach(::remove) }
+    fun clear()
 }
-
-////////////////////////////////////////////////////////////////////////////////////////////
 
 internal class ScatterMapPageStorage<Key : Any, PageItem>(
     private val pageItemKey: (PageItem) -> Any
 ) : PageStorage<Key, PageItem> {
-    private val pageCache = MutableScatterMap<Key, List<PageItem>>(defaultAssumedCacheSize)
-    private val itemIdToPageKeyCache = MutableScatterMap<Any, Key>(defaultAssumedCacheSize)
+    private val pagesByKey = MutableScatterMap<Key, List<PageItem>>(defaultAssumedCacheSize)
+    private val ownerByItemId = MutableScatterMap<Any, Key>(defaultAssumedCacheSize)
 
-    override val all: Map<Key, List<PageItem>>
-        get() = MutableScatterMap<Key, List<PageItem>>(pageCache.capacity)
-            .apply { putAll(pageCache) }
+    override val snapshot: Map<Key, List<PageItem>>
+        get() = MutableScatterMap<Key, List<PageItem>>(pagesByKey.capacity)
+            .apply { putAll(pagesByKey) }
             .asMap()
 
-    override fun set(key: Key, page: List<PageItem>) {
-        var stolenByPage: MutableScatterMap<Key, MutableScatterSet<Any>>? = null
-        val incomingIds = MutableScatterSet<Any>(page.size)
+    override fun replacePage(key: Key, items: List<PageItem>) {
+        var displacedPageKeys: MutableScatterSet<Key>? = null
+        val incomingIds = MutableScatterSet<Any>(items.size)
+        val deduplicatedItems = ArrayList<PageItem>(items.size)
 
-        page.forEach { item ->
-            val id = pageItemKey(item)
-            incomingIds.add(id)
+        for (index in items.indices) {
+            val item = items[index]
 
-            val currentOwner = itemIdToPageKeyCache[id]
+            val itemId = pageItemKey(item)
+            if (!incomingIds.add(itemId)) continue
+            deduplicatedItems.add(item)
+
+            val currentOwner = ownerByItemId[itemId]
             if (currentOwner != null && currentOwner != key) {
-                val map = stolenByPage
-                    ?: MutableScatterMap<Key, MutableScatterSet<Any>>().also { stolenByPage = it }
-
-                map.getOrPut(currentOwner) { MutableScatterSet() }.add(id)
+                val keys = displacedPageKeys
+                    ?: MutableScatterSet<Key>().also { displacedPageKeys = it }
+                keys.add(currentOwner)
             }
-            itemIdToPageKeyCache[id] = key
+            ownerByItemId[itemId] = key
         }
 
-        pageCache[key]?.forEach { oldItem ->
-            val oldId = pageItemKey(oldItem)
+        pagesByKey[key]?.forEach { oldItem ->
+            val oldItemId = pageItemKey(oldItem)
             // if it's not in the new page, and no other page stole it in the meantime - drop it
-            if (oldId !in incomingIds && itemIdToPageKeyCache[oldId] == key) {
-                itemIdToPageKeyCache.remove(oldId)
+            if (oldItemId !in incomingIds && ownerByItemId[oldItemId] == key) {
+                ownerByItemId.remove(oldItemId)
             }
         }
 
-        stolenByPage?.forEach { ownerKey, stolenIds ->
-            val existing = pageCache[ownerKey] ?: return@forEach
-            val trimmed = ArrayList<PageItem>(existing.size)
+        displacedPageKeys?.forEach { ownerKey ->
+            val existing = pagesByKey[ownerKey] ?: return@forEach
+            val remaining = ArrayList<PageItem>(existing.size)
 
-            existing.forEach { item ->
-                if (pageItemKey(item) !in stolenIds) {
-                    trimmed.add(item)
+            for (index in existing.indices) {
+                val item = existing[index]
+                if (ownerByItemId[pageItemKey(item)] == ownerKey) {
+                    remaining.add(item)
                 }
             }
 
-            if (trimmed.isEmpty()) {
-                pageCache.remove(ownerKey)
+            if (remaining.isEmpty()) {
+                pagesByKey.remove(ownerKey)
             } else {
-                pageCache[ownerKey] = trimmed
+                pagesByKey[ownerKey] = remaining
             }
         }
 
-        pageCache[key] = page
+        pagesByKey[key] = deduplicatedItems
     }
 
     override fun getPageKeyForItem(item: PageItem): Key? =
-        itemIdToPageKeyCache[pageItemKey(item)]
+        ownerByItemId[pageItemKey(item)]
 
-    override fun remove(key: Key) {
-        pageCache.remove(key)?.forEach { item ->
-            itemIdToPageKeyCache.remove(pageItemKey(item))
+    override fun removePage(key: Key) {
+        val list = pagesByKey.remove(key) ?: return
+
+        for (index in list.indices) {
+            val item = list[index]
+
+            val itemId = pageItemKey(item)
+            if (ownerByItemId[itemId] == key) {
+                ownerByItemId.remove(itemId)
+            }
         }
+    }
+
+    override fun clear() {
+        pagesByKey.clear()
+        ownerByItemId.clear()
     }
 }
