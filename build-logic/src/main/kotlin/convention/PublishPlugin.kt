@@ -32,9 +32,12 @@ class PublishPlugin : Plugin<Project> {
     }
 
     private fun resolveVersion(project: Project): Any {
-        val explicit = (project.findProperty("version") as? String)?.trim()?.takeIf { it.isNotEmpty() }
+        val explicit = (project.findProperty("version") as? String)
+            ?.trim()
+            ?.takeIf { it.isNotEmpty() && it != "unspecified" }
         return explicit ?: project.autoVersionFromGit()
     }
+
 
     private fun setupSigning(project: Project): Boolean {
         val signingKey = project.getAnyCredentialOf(
