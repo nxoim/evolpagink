@@ -6,7 +6,6 @@ import androidx.compose.foundation.pager.PagerState
 import androidx.compose.runtime.State
 import com.nxoim.evolpagink.core.InternalPageableApi
 import com.nxoim.evolpagink.core.Pageable
-import kotlin.jvm.JvmInline
 
 /**
  * Compose representation of [Pageable].
@@ -36,8 +35,7 @@ sealed interface PageItemKeyProvider<T> {
     fun key(index: Int, item: T): Any
 }
 
-@JvmInline
-internal value class PageItemKeyProviderImpl<PageItem>(
+internal class PageItemKeyProviderImpl<PageItem>(
     private val keyProvider: (PageItem) -> Any,
 ) : PageItemKeyProvider<PageItem> {
     override fun key(item: PageItem): Any = keyProvider(item)

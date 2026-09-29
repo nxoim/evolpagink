@@ -1,16 +1,20 @@
 package com.nxoim.evolpagink.compose
 
+import androidx.collection.MutableScatterMap
+import androidx.collection.MutableScatterSet
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.snapshotFlow
-import androidx.compose.ui.util.fastMapNotNull
+import androidx.compose.ui.util.fastForEach
+import androidx.compose.ui.util.fastForEachIndexed
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.nxoim.evolpagink.core.InternalPageableApi
 import com.nxoim.evolpagink.core.PageDisplayingEvent
 import com.nxoim.evolpagink.core.Pageable
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.withContext
 import kotlin.coroutines.CoroutineContext
 
@@ -28,55 +32,118 @@ internal fun <Key : Any, PageItem> Pageable<Key, PageItem>.collectListStateIntoP
         PageItemKeyProviderImpl(key)
     }
 
-    LaunchedEffect(layoutInfo, pageable, currentItemsState, anchored) {
+    LaunchedEffect(
+        layoutInfo,
+        pageable,
+        currentItemsState,
+        anchored,
+        keyer
+    ) {
         withContext(coroutineContext) {
             if (anchored) {
-                snapshotFlow { layoutInfo.visibleItemsInfo }
-                    .map { visibleItemsInfo ->
-                        val items = currentItemsState.value
-                        val itemMap = items.associateBy(keyer::key)
+                var cachedItems: List<PageItem>? = null
+                var cachedMap: MutableScatterMap<Any, PageItem>? = null
 
-                        if (visibleItemsInfo.isEmpty() || items.isEmpty()) {
-                            return@map null
+                snapshotFlow {
+                    val count = layoutInfo.visibleItemCount
+                    val items = currentItemsState.value
+                    if (count == 0 || items.isEmpty()) return@snapshotFlow null
+
+                    val middleIndex = count / 2
+                    val middleKey = layoutInfo.getVisibleItemKey(middleIndex)
+                    val middleLayoutIndex = layoutInfo.getVisibleItemIndex(middleIndex)
+
+                    MiddleItemSnapshot(middleKey, middleLayoutIndex, items)
+                }
+                    .mapNotNull { snapshot ->
+                        if (snapshot == null) return@mapNotNull null
+
+                        val items = snapshot.items
+                        val directCandidate = items.getOrNull(snapshot.layoutIndex)
+                        val middleItem = if (directCandidate != null && keyer.key(directCandidate) == snapshot.key) {
+                            directCandidate
+                        } else {
+                            if (cachedItems !== items) {
+                                cachedItems = items
+                                val map = MutableScatterMap<Any, PageItem>(items.size)
+                                for (i in items.indices) {
+                                    val item = items[i]
+                                    map[keyer.key(item)] = item
+                                }
+                                cachedMap = map
+                            }
+                            cachedMap?.get(snapshot.key)
                         }
 
-                        val visiblePagedItems = visibleItemsInfo
-                            .fastMapNotNull { itemInfo -> itemMap[itemInfo.key] }
-
-                        if (visiblePagedItems.isEmpty()) return@map null
-
-                        val middleItem = visiblePagedItems.getOrNull(visiblePagedItems.size / 2)
                         middleItem?.let { pageable.getPageKeyForItem(it) }
                     }
                     .distinctUntilChanged()
-                    .collect() {
-                        it?.let { pageable.onVisibilityEvent(PageDisplayingEvent.PageAnchorChanged(it)) }
-                    }
+                    .collect { pageable.onVisibilityEvent(PageDisplayingEvent.PageAnchorChanged(it)) }
             } else {
-                snapshotFlow { layoutInfo.visibleItemsInfo }
-                    // bind emissions to updates in pageable
-                    .map { visibleItemsInfo ->
-                        val items = currentItemsState.value
-                        val itemMap = items.associateBy(keyer::key)
+                var cachedItems: List<PageItem>? = null
+                var cachedMap: MutableScatterMap<Any, PageItem>? = null
 
-                        if (visibleItemsInfo.isEmpty() || items.isEmpty()) {
-                            return@map emptyList()
+                snapshotFlow {
+                    val count = layoutInfo.visibleItemCount
+                    val items = currentItemsState.value
+                    if (count == 0 || items.isEmpty()) return@snapshotFlow null
+
+                    val keys = ArrayList<Any>(count)
+                    val indices = IntArray(count)
+                    var i = 0
+                    layoutInfo.forEachVisibleItem { index, key ->
+                        keys.add(key)
+                        indices[i++] = index
+                    }
+                    VisibleItemsSnapshot(keys, indices, items)
+                }
+                    .map { snapshot ->
+                        if (snapshot == null) return@map emptyList()
+
+                        val items = snapshot.items
+                        val keys = snapshot.keys
+                        val indices = snapshot.indices
+
+                        if (cachedItems !== items) {
+                            cachedItems = items
+                            val map = MutableScatterMap<Any, PageItem>(items.size)
+                            items.fastForEach { item ->
+                                map[keyer.key(item)] = item
+                            }
+
+                            cachedMap = map
                         }
 
-                        val visiblePagedItems = visibleItemsInfo
-                            .fastMapNotNull { itemInfo -> itemMap[itemInfo.key] }
+                        val resolvedItems = ArrayList<PageItem>(keys.size)
+                        keys.fastForEachIndexed { index, itemKey ->
+                            val layoutIndex = indices[index]
+                            val direct = items.getOrNull(layoutIndex)
 
-                        if (visiblePagedItems.isEmpty()) return@map emptyList()
+                            if (direct != null && keyer.key(direct) == itemKey) {
+                                resolvedItems.add(direct)
+                            } else {
+                                cachedMap
+                                    ?.get(itemKey)
+                                    ?.let(resolvedItems::add)
+                            }
+                        }
 
-                        val visiblePageKeys = visiblePagedItems
-                            .fastMapNotNull { pageable.getPageKeyForItem(it) }
-                            .toSet()
-                            .toList()
+                        if (resolvedItems.isEmpty()) return@map emptyList()
 
-                        visiblePageKeys
+                        val pageKeys = ArrayList<Key>(resolvedItems.size)
+                        val seenKeys = MutableScatterSet<Key>(resolvedItems.size)
+                        var lastKey: Key? = null
+                        resolvedItems.fastForEach { item ->
+                            val pageKey = pageable.getPageKeyForItem(item) ?: return@fastForEach
+                            if (pageKey != lastKey && seenKeys.add(pageKey)) {
+                                pageKeys.add(pageKey)
+                                lastKey = pageKey
+                            }
+                        }
+                        pageKeys
                     }
                     .distinctUntilChanged()
-                    .collect() {
+                    .collect {
                         pageable.onVisibilityEvent(PageDisplayingEvent.VisibleItemsUpdated(it))
                     }
             }
@@ -86,4 +153,30 @@ internal fun <Key : Any, PageItem> Pageable<Key, PageItem>.collectListStateIntoP
     return remember(pageable, currentItemsState, keyer) {
         PageableComposeState(currentItemsState, keyer)
     }
+}
+
+private class MiddleItemSnapshot<T>(
+    val key: Any,
+    val layoutIndex: Int,
+    val items: List<T>
+) {
+    override fun equals(other: Any?): Boolean =
+        other is MiddleItemSnapshot<*> &&
+            key == other.key &&
+            items === other.items
+
+    override fun hashCode(): Int = key.hashCode()
+}
+
+private class VisibleItemsSnapshot<T>(
+    val keys: List<Any>,
+    val indices: IntArray,
+    val items: List<T>
+) {
+    override fun equals(other: Any?): Boolean =
+        other is VisibleItemsSnapshot<*> &&
+            keys == other.keys &&
+            items === other.items
+
+    override fun hashCode(): Int = keys.hashCode()
 }
